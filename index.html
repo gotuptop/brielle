@@ -28,7 +28,7 @@ a{color:var(--amber);text-decoration:none}
 
 /* Layout */
 .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh;padding-bottom:84px}
-.sidebar{position:sticky;top:0;height:100vh;padding:24px 16px;border-right:1px solid var(--line);background:rgba(15,13,11,.85);display:flex;flex-direction:column;gap:6px}
+.sidebar{position:sticky;top:0;height:100vh;padding:24px 16px 100px;border-right:1px solid var(--line);background:rgba(15,13,11,.85);display:flex;flex-direction:column;gap:6px}
 .logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:34px;letter-spacing:2px;color:var(--amber);margin:0 8px 22px}
 .logo .reel{width:34px;height:34px;border-radius:50%;border:4px solid var(--amber);position:relative;animation:spin 6s linear infinite}
 .logo .reel::after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--amber)}
@@ -190,7 +190,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 
 <div class="mobile-top">
   <div class="logo"><span class="reel"></span>BRIELLE</div>
-  <span class="counter">Créditos: <b id="creditsMobile" style="color:var(--amber-2)">0</b></span>
+  <span class="counter">Canciones: <b id="creditsMobile" style="color:var(--amber-2)">0</b></span>
 </div>
 
 <div class="app">
@@ -202,9 +202,9 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     <button class="nav-btn" data-go="planes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>Planes</button>
     <button class="nav-btn" data-go="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</button>
     <div class="credits-box">
-      <div class="lbl">Créditos</div>
+      <div class="lbl">Canciones disponibles</div>
       <div class="num" id="credits">0</div>
-      <button class="btn btn-ghost" style="width:100%;margin-top:10px;padding:8px" data-go="planes">Obtener más</button>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px;padding:8px" data-go="planes">Ver planes</button>
     </div>
   </aside>
 
@@ -287,7 +287,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
               <p class="hint">Todas las canciones son completas, con estructura de principio a fin.</p>
             </div>
           </div>
-          <button class="btn btn-primary" id="recordBtn" style="width:100%;padding:16px;font-size:16px">● Grabar canción <span style="opacity:.7;font-weight:500">(1 crédito)</span></button>
+          <button class="btn btn-primary" id="recordBtn" style="width:100%;padding:16px;font-size:16px">● Grabar canción <span style="opacity:.7;font-weight:500">(usa 1 canción)</span></button>
         </div>
       </div>
     </section>
@@ -304,24 +304,24 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     <!-- PLANES -->
     <section id="v-planes" data-view="planes">
       <h2>Planes</h2>
-      <p class="sub">Elige cuánto quieres crear. Cancela cuando quieras.</p>
+      <p class="sub">Elige cuánto quieres crear. Cancela cuando quieras. Cada canción que grabas, incluso si la repites, usa 1 canción de tu plan.</p>
       <div class="plans">
         <div class="plan">
           <div class="name">Demo</div>
-          <div class="price">$0 <small>/ mes</small></div>
-          <ul><li>10 créditos al mes</li><li>Canciones completas</li><li>Uso personal</li><li>Biblioteca básica</li></ul>
+          <div class="price">$0 <small>para probar</small></div>
+          <ul><li>2 canciones gratis para probar</li><li>Canciones completas</li><li>Licencia Royalty-Free (uso personal y redes sociales)</li><li>Biblioteca personal</li></ul>
           <button class="btn btn-ghost" data-plan="Demo">Plan actual</button>
         </div>
         <div class="plan hot">
           <div class="name">Estudio</div>
           <div class="price">$9.99 <small>/ mes</small></div>
-          <ul><li>500 créditos al mes</li><li>Descargas en alta calidad</li><li>Todos los géneros y voces</li><li>Cola de grabación prioritaria</li></ul>
+          <ul><li>20 canciones al mes</li><li>Licencia Royalty-Free (uso personal y redes sociales)</li><li>Todos los géneros y voces</li><li>Descargas en alta calidad</li></ul>
           <button class="btn btn-primary" data-plan="Estudio">Elegir Estudio</button>
         </div>
         <div class="plan">
           <div class="name">Productor</div>
           <div class="price">$24.99 <small>/ mes</small></div>
-          <ul><li>2,000 créditos al mes</li><li>Licencia de uso comercial</li><li>Descarga de pistas separadas</li><li>Soporte prioritario</li></ul>
+          <ul><li><span><b style="color:var(--text)">60 canciones al mes</b> (el triple que Estudio)</span></li><li>Licencia de distribución: publica en Spotify, Apple Music y más</li><li>Todos los géneros y voces</li><li>Soporte prioritario</li></ul>
           <button class="btn btn-ghost" data-plan="Productor">Elegir Productor</button>
         </div>
       </div>
@@ -337,7 +337,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
           <div class="field" style="margin-bottom:0"><label for="uemail">Correo electrónico</label><input class="input" id="uemail" type="email" placeholder="tu@correo.com"></div>
           <button class="btn btn-primary" id="saveProfile" style="margin-top:18px">Guardar</button>
         </div>
-        <div class="card"><label class="counter">CANCIONES CREADAS</label><div class="stat" id="statSongs">0</div><label class="counter">CRÉDITOS DISPONIBLES</label><div class="stat" id="statCredits">0</div></div>
+        <div class="card"><label class="counter">CANCIONES CREADAS</label><div class="stat" id="statSongs">0</div><label class="counter">CANCIONES DISPONIBLES</label><div class="stat" id="statCredits">0</div></div>
         <div class="card"><label class="counter">PLAN ACTUAL</label><div class="stat" id="statPlan">Demo</div><p class="hint" style="margin-bottom:14px">Las cuentas y los pagos reales se activan en las próximas fases.</p><button class="btn btn-ghost" id="resetBtn">Reiniciar demo</button></div>
       </div>
     </section>
@@ -392,7 +392,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     {id:3,title:'Bailando en Arlington',genre:'Cumbia',voice:'Dúo',mood:'Alegre',dur:198,created:Date.now()-3600000}
   ];
   let songs = store.get('songs', seed);
-  let credits = store.get('credits', 10);
+  let credits = store.get('credits', 2);
   let plan = store.get('plan', 'Demo');
   let profile = store.get('profile', {name:'',email:''});
   const sel = {genre:'Balada', voice:'Masculina', dur:DURS[0]};
@@ -452,7 +452,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     const title=$('#title').value.trim(), lyrics=ly.value.trim();
     if(!title){ toast('Escribe un título para tu canción'); $('#title').focus(); return; }
     if(sel.voice!=='Instrumental' && lyrics.length<20){ toast('Escribe tu letra (mínimo 20 caracteres)'); ly.focus(); return; }
-    if(credits<1){ toast('No te quedan créditos. Elige un plan para seguir creando.'); go('planes'); return; }
+    if(credits<1){ toast('No te quedan canciones disponibles. Elige un plan para seguir creando.'); go('planes'); return; }
     record({title,lyrics});
   };
   function record({title,lyrics}){
@@ -546,7 +546,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     $('#statSongs').textContent=songs.length; $('#statCredits').textContent=credits; $('#statPlan').textContent=plan;
   }
   $('#saveProfile').onclick=()=>{ profile={name:$('#uname').value.trim(),email:$('#uemail').value.trim()}; store.set('profile',profile); toast('Perfil guardado'); };
-  $('#resetBtn').onclick=()=>{ if(!confirm('¿Reiniciar la demo? Se borrarán tus canciones de prueba.')) return; stop(); songs=[...seed]; credits=10; plan='Demo'; current=null; save(); resetPlayer(); renderCredits(); renderProfile(); toast('Demo reiniciada'); };
+  $('#resetBtn').onclick=()=>{ if(!confirm('¿Reiniciar la demo? Se borrarán tus canciones de prueba.')) return; stop(); songs=[...seed]; credits=2; plan='Demo'; current=null; save(); resetPlayer(); renderCredits(); renderProfile(); toast('Demo reiniciada'); };
 
   /* ---------- hero console animation ---------- */
   const fd=$('#faders');
