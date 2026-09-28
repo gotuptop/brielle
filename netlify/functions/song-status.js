@@ -16,34 +16,57 @@ const json = (status, body) => ({
 
 const auth = () => ({ Authorization: `Bearer ${process.env.SOUNDVERSE_API_KEY}` });
 
-// Busca el primer enlace http(s) dentro de cualquier respuesta, sin importar cómo se llame el campo.
+// Un enlace sirve si es http(s) y NO es el localizador privado sin firma (…/private/… sin token).
+const usable = u => typeof u === 'string' && /^https?:\/\//i.test(u) &&
+  !(/\/private\//.test(u) && !/[?&](sig|se|sv|token|X-Amz-Signature|Signature)=/i.test(u));
+
+// Busca el primer enlace utilizable dentro de cualquier respuesta, sin importar cómo se llame el campo.
 function findUrl(obj, depth = 0) {
-  if (!obj || depth > 5) return null;
-  if (typeof obj === 'string') return /^https?:\/\//i.test(obj) ? obj : null;
+  if (!obj || depth > 6) return null;
+  if (typeof obj === 'string') return usable(obj) ? obj : null;
   if (Array.isArray(obj)) { for (const v of obj) { const u = findUrl(v, depth + 1); if (u) return u; } return null; }
   if (typeof obj === 'object') {
-    // Primero los campos que más probablemente son el enlace de descarga.
-    const preferred = ['signed_url', 'download_url', 'url', 'href', 'link', 'presigned_url', 'playback_url'];
+    const preferred = ['signed_url', 'download_url', 'audio_url', 'song_url', 'url', 'href', 'link', 'presigned_url', 'playback_url', 'stream_url'];
     for (const k of preferred) { const u = findUrl(obj[k], depth + 1); if (u) return u; }
     for (const k of Object.keys(obj)) { const u = findUrl(obj[k], depth + 1); if (u) return u; }
   }
   return null;
 }
 
-// Pide a Soundverse un enlace firmado de corta duración para un archivo.
-async function signedUrl(fileId) {
-  const res = await fetch(`${API}/v1/files/${encodeURIComponent(fileId)}/download`, {
-    headers: auth(),
-    redirect: 'manual',
-  });
+async function tryGet(path) {
+  const res = await fetch(`${API}${path}`, { headers: auth(), redirect: 'manual' });
   if (res.status >= 300 && res.status < 400) {
-    return { url: res.headers.get('location'), status: res.status, raw: { redirect: res.headers.get('location') } };
+    const loc = res.headers.get('location');
+    return { path, status: res.status, url: usable(loc) ? loc : null, raw: { redirect: loc } };
   }
   const text = await res.text();
-  let raw;
-  try { raw = JSON.parse(text); } catch { raw = text.slice(0, 2000); }
-  const url = typeof raw === 'string' ? (/^https?:\/\//i.test(raw.trim()) ? raw.trim() : null) : findUrl(raw);
-  return { url: res.ok ? url : null, status: res.status, raw };
+  let raw; try { raw = JSON.parse(text); } catch { raw = text.slice(0, 1500); }
+  let url = null;
+  if (res.ok) url = typeof raw === 'string' ? (usable(raw.trim()) ? raw.trim() : null) : findUrl(raw);
+  return { path, status: res.status, url, raw: typeof raw === 'string' ? raw : JSON.stringify(raw).slice(0, 1500) };
+}
+
+// Rutas posibles para obtener un enlace reproducible, en orden de preferencia.
+function candidates(jobId, fileId, blobHash) {
+  const f = encodeURIComponent(fileId || ''), j = encodeURIComponent(jobId || '');
+  const list = [];
+  if (fileId) list.push(`/v1/files/${f}/download`, `/v1/files/${f}/download-url`, `/v1/files/${f}/url`, `/v1/files/${f}`);
+  if (jobId) list.push(`/v7/status?job_id=${j}`, `/v5/status?job_id=${j}`);
+  if (blobHash) list.push(`/v1/files/${encodeURIComponent(blobHash)}/download`);
+  return list;
+}
+
+// Devuelve el primer enlace que funcione (y, si se pide, el detalle de cada intento).
+async function resolveUrl(jobId, asset, collectAll) {
+  const tries = [];
+  for (const path of candidates(jobId, assetFileId(asset), asset.blob_hash)) {
+    let r;
+    try { r = await tryGet(path); } catch (e) { r = { path, status: 0, url: null, raw: String(e.message || e) }; }
+    tries.push(r);
+    if (r.url && !collectAll) break;
+  }
+  const hit = tries.find(t => t.url);
+  return { url: hit ? hit.url : null, via: hit ? hit.path : null, tries };
 }
 
 // Encuentra la lista de archivos de audio de una tarea, se llame como se llame el campo.
@@ -85,8 +108,11 @@ exports.handler = async (event) => {
     if (debug) {
       const assets = getAssets(task);
       const fid = assets[0] ? assetFileId(assets[0]) : null;
-      const download = fid ? await signedUrl(fid) : null;
-      return json(200, { id, generationStatus: res.status, generation: data, firstFileId: fid, download, listRaw });
+      const download = assets[0] ? await resolveUrl(id, assets[0], true) : null;
+      // Recortamos la respuesta larga (letra con tiempos) para que el diagnóstico sea legible.
+      const slim = JSON.parse(JSON.stringify(data));
+      if (slim.output && slim.output.metadata_json) slim.output.metadata_json = String(slim.output.metadata_json).slice(0, 200) + '…';
+      return json(200, { id, status: task.status, firstFileId: fid, workingRoute: download && download.via, download, generation: slim });
     }
 
     if (!res.ok) return json(res.status, { error: data.error || 'Error de Soundverse', message: data.message || '' });
@@ -103,12 +129,13 @@ exports.handler = async (event) => {
     for (const a of getAssets(task)) {
       const fileId = assetFileId(a);
       if (!fileId) continue;
-      const d = await signedUrl(fileId);
+      const d = await resolveUrl(id, a, false);
+      let meta = {}; try { meta = JSON.parse(a.metadata_json || '{}'); } catch {}
       tracks.push({
         fileId,
         url: d.url,
-        duration: a.duration || a.duration_seconds || (a.metadata && a.metadata.duration) || null,
-        title: a.title || a.name || null,
+        duration: meta.duration_ms ? meta.duration_ms / 1000 : (a.duration || a.duration_seconds || null),
+        title: meta.song_name || a.title || a.name || null,
       });
     }
     if (!tracks.length) return json(200, { status: 'completed', error: 'Canción lista pero sin archivos de audio' });
