@@ -116,6 +116,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 .song .s{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
 .song .del{color:var(--muted);padding:4px}
 .song .del:hover{color:var(--red)}
+.song .acts{display:flex;gap:2px}
+.song .dl{color:var(--muted);padding:4px}
+.song .dl:hover{color:var(--amber)}
+.badge{font:600 11px var(--mono);padding:2px 8px;border-radius:999px;background:var(--panel-2);color:var(--amber)}
+.badge.fail{color:var(--red)}
+.song.pending .disc{animation:spin 2.5s linear infinite;opacity:.6}
 .empty{text-align:center;padding:60px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:var(--radius)}
 
 /* Plans */
@@ -282,9 +288,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
               <input type="range" id="tempo" min="60" max="160" value="95">
             </div>
             <div class="field" style="margin-bottom:0">
-              <label>Duración</label>
-              <div class="chips" id="durations"></div>
-              <p class="hint">Todas las canciones son completas, con estructura de principio a fin.</p>
+              <p class="hint" style="margin-top:0">Brielle graba canciones completas, con intro, versos, coro y final. Usa las etiquetas [Verso], [Coro], etc. en tu letra para guiar la estructura.</p>
             </div>
           </div>
           <button class="btn btn-primary" id="recordBtn" style="width:100%;padding:16px;font-size:16px">● Grabar canción <span style="opacity:.7;font-weight:500">(usa 1 canción)</span></button>
@@ -369,6 +373,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     <p class="sub" style="margin:0">Tu canción está en la cabina.</p>
     <div class="steps" id="steps"></div>
     <div class="progress"><div id="mProg"></div></div>
+    <p class="hint" id="mNote" style="margin-top:12px">Una canción completa tarda normalmente de 1 a 4 minutos.</p>
+    <button class="btn btn-ghost" id="mBg" style="margin-top:14px">Seguir en segundo plano</button>
   </div>
 </div>
 
@@ -379,31 +385,62 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const store = {
     get(k, d){ try{ const v = localStorage.getItem('brielle_'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
-    set(k, v){ try{ localStorage.setItem('brielle_'+k, JSON.stringify(v)); }catch(e){} }
+    set(k, v){ try{ localStorage.setItem('brielle_'+k, JSON.stringify(v)); }catch(e){} },
+    del(k){ try{ localStorage.removeItem('brielle_'+k); }catch(e){} }
   };
 
   const GENRES = ['Balada','Pop','Bachata','Cumbia','Ranchera','Reggaetón','Salsa','Rock','Gospel','R&B','Bolero','Acústico'];
   const VOICES = ['Masculina','Femenina','Dúo','Coro','Instrumental'];
-  const DURS = [{l:'Completa (~3 min)',s:180},{l:'Extendida (~4 min)',s:240},{l:'Larga (~5 min)',s:300}];
 
-  const seed = [
-    {id:1,title:'Un nuevo comienzo',genre:'Balada',voice:'Masculina',mood:'Inspirador',dur:214,created:Date.now()-86400000},
-    {id:2,title:'Luz de mañana',genre:'Gospel',voice:'Coro',mood:'Espiritual',dur:236,created:Date.now()-43200000},
-    {id:3,title:'Bailando en Arlington',genre:'Cumbia',voice:'Dúo',mood:'Alegre',dur:198,created:Date.now()-3600000}
-  ];
-  let songs = store.get('songs', seed);
+  // Cómo se describe cada opción a Soundverse (el modelo entiende mejor las etiquetas de estilo en inglés).
+  const GENRE_PROMPT = {'Balada':'Latin romantic ballad','Pop':'Latin pop','Bachata':'bachata','Cumbia':'cumbia','Ranchera':'ranchera, mariachi','Reggaetón':'reggaeton','Salsa':'salsa','Rock':'rock en español','Gospel':'Spanish Christian worship, gospel','R&B':'Latin R&B','Bolero':'bolero','Acústico':'acoustic guitar ballad'};
+  const MOOD_PROMPT = {'Romántico':'romantic','Alegre':'happy, upbeat','Melancólico':'melancholic','Inspirador':'inspiring','Espiritual':'spiritual','Enérgico':'energetic','Nostálgico':'nostalgic'};
+  const VOICE_PROMPT = {'Masculina':'male vocals','Femenina':'female vocals','Dúo':'male and female duet vocals','Coro':'choir vocals','Instrumental':'instrumental, no vocals'};
+  const VOICE_GENDER = {'Masculina':'male','Femenina':'female'};
+
+  let songs = store.get('songs_v2', []);
   let credits = store.get('credits', 2);
   let plan = store.get('plan', 'Demo');
   let profile = store.get('profile', {name:'',email:''});
-  const sel = {genre:'Balada', voice:'Masculina', dur:DURS[0]};
+  const sel = {genre:'Balada', voice:'Masculina'};
 
   /* ---------- helpers ---------- */
   const hue = str => [...str].reduce((a,c)=>a+c.charCodeAt(0),0) % 360;
   const coverBg = s => `linear-gradient(135deg,hsl(${hue(s.title)},60%,38%),hsl(${(hue(s.genre)+40)%360},55%,18%))`;
-  const fmt = t => `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
-  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600); }
-  function save(){ store.set('songs',songs); store.set('credits',credits); store.set('plan',plan); }
+  const fmt = t => (t!=null && isFinite(t)) ? `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}` : '—';
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3200); }
+  function save(){ store.set('songs_v2',songs); store.set('credits',credits); store.set('plan',plan); }
+
+  /* ---------- servidor (funciones de Netlify) ---------- */
+  function getCode(){
+    let c = store.get('code','');
+    if(!c){
+      c = (prompt('Brielle está en fase de pruebas.\nEscribe el código de acceso:')||'').trim();
+      if(c) store.set('code',c);
+    }
+    return c;
+  }
+  function friendly(d){
+    const e = d && d.error;
+    if(e==='InsufficientFunds') return 'El estudio se quedó sin saldo en Soundverse. Hay que recargar la billetera.';
+    if(e==='RateLimited') return 'Demasiadas grabaciones seguidas. Espera un momento e intenta de nuevo.';
+    if(e==='InvalidGenerationInput') return 'Soundverse no aceptó los datos: ' + (d.message||'revisa la letra.');
+    return (d && (d.message || d.error)) || 'Algo salió mal. Intenta de nuevo.';
+  }
+  async function api(path, opts={}){
+    const code = getCode();
+    if(!code) throw new Error('Necesitas el código de acceso para grabar.');
+    let res;
+    try{
+      res = await fetch('/.netlify/functions/'+path, {...opts, headers:{'Content-Type':'application/json','x-brielle-code':code}});
+    }catch(e){ throw new Error('Sin conexión con el estudio. Revisa tu internet.'); }
+    const data = await res.json().catch(()=>({}));
+    if(res.status===401){ store.del('code'); throw new Error('Código de acceso incorrecto. Vuelve a intentarlo.'); }
+    if(!res.ok) throw new Error(friendly(data));
+    return data;
+  }
 
   /* ---------- router ---------- */
   function go(view){
@@ -418,14 +455,13 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   document.addEventListener('click', e => { const b=e.target.closest('[data-go]'); if(b) go(b.dataset.go); });
   window.addEventListener('hashchange', ()=>go(location.hash.slice(1)));
 
-  /* ---------- credits ---------- */
   function renderCredits(){ $('#credits').textContent=credits; $('#creditsMobile').textContent=credits; }
 
   /* ---------- chips ---------- */
-  function chips(el, items, key, label=x=>x){
+  function chips(el, items, key){
     el.innerHTML='';
     items.forEach(it=>{
-      const b=document.createElement('button'); b.className='chip'; b.textContent=label(it);
+      const b=document.createElement('button'); b.className='chip'; b.textContent=it;
       if(sel[key]===it) b.classList.add('on');
       b.onclick=()=>{ sel[key]=it; [...el.children].forEach(c=>c.classList.remove('on')); b.classList.add('on'); };
       el.appendChild(b);
@@ -433,9 +469,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   }
   chips($('#genres'), GENRES, 'genre');
   chips($('#voices'), VOICES, 'voice');
-  chips($('#durations'), DURS, 'dur', d=>d.l);
 
-  /* ---------- lyrics editor ---------- */
+  /* ---------- editor de letra ---------- */
   const ly=$('#lyrics');
   ly.addEventListener('input',()=>$('#count').textContent=`${ly.value.length} / 3000`);
   $$('.tools button').forEach(b=>b.onclick=()=>{
@@ -446,38 +481,104 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   });
   $('#tempo').oninput=e=>$('#tempoVal').textContent=e.target.value+' BPM';
 
-  /* ---------- recording (simulated until the AI is connected) ---------- */
-  const STEPS=['Analizando la letra','Componiendo la melodía','Grabando las voces','Arreglos e instrumentos','Mezcla y masterización'];
+  function buildPrompt(s){
+    const parts=[GENRE_PROMPT[s.genre]||s.genre, (MOOD_PROMPT[s.mood]||s.mood)+' mood', s.tempo+' BPM', VOICE_PROMPT[s.voice]||''];
+    if(s.voice!=='Instrumental') parts.push('sung in Spanish');
+    parts.push('full-length song with intro, verses, chorus and outro');
+    return parts.filter(Boolean).join(', ');
+  }
+
+  /* ---------- grabación real ---------- */
+  const STEPS=['Enviando al estudio','En cola','Grabando voces e instrumentos','Mezcla y masterización'];
+  const modal={
+    open(title){
+      $('#mTitle').textContent=title;
+      $('#steps').innerHTML=STEPS.map(s=>`<div class="step"><span class="dot"></span>${s}</div>`).join('');
+      $('#mProg').style.width='0'; $('#modal').classList.add('show'); this.at(0);
+    },
+    at(i){
+      [...$('#steps').children].forEach((el,k)=>{
+        el.classList.toggle('done',k<i); el.classList.toggle('run',k===i);
+        el.querySelector('.dot').textContent = k<i ? '✓' : '';
+      });
+      $('#mProg').style.width=Math.min(95,(i/STEPS.length*100)+5)+'%';
+    },
+    close(){ $('#modal').classList.remove('show'); }
+  };
+  $('#mBg').onclick=()=>{ modal.close(); toast('Tu canción se sigue grabando. La verás en tu biblioteca.'); go('biblioteca'); };
+
+  let recording=false;
   $('#recordBtn').onclick=()=>{
+    if(recording){ toast('Ya hay una canción grabándose. Espera a que termine.'); return; }
     const title=$('#title').value.trim(), lyrics=ly.value.trim();
     if(!title){ toast('Escribe un título para tu canción'); $('#title').focus(); return; }
     if(sel.voice!=='Instrumental' && lyrics.length<20){ toast('Escribe tu letra (mínimo 20 caracteres)'); ly.focus(); return; }
     if(credits<1){ toast('No te quedan canciones disponibles. Elige un plan para seguir creando.'); go('planes'); return; }
     record({title,lyrics});
   };
-  function record({title,lyrics}){
-    const m=$('#modal'), st=$('#steps'), pr=$('#mProg');
-    $('#mTitle').textContent=title;
-    st.innerHTML=STEPS.map(s=>`<div class="step"><span class="dot"></span>${s}</div>`).join('');
-    pr.style.width='0'; m.classList.add('show');
-    const els=[...st.children]; let i=0;
-    (function tick(){
-      if(i>0){ els[i-1].classList.remove('run'); els[i-1].classList.add('done'); els[i-1].querySelector('.dot').textContent='✓'; }
-      pr.style.width=(i/STEPS.length*100)+'%';
-      if(i<STEPS.length){ els[i].classList.add('run'); i++; setTimeout(tick, 900+Math.random()*600); return; }
-      setTimeout(()=>{
-        m.classList.remove('show');
-        const s={id:Date.now(),title,lyrics,genre:sel.genre,voice:sel.voice,mood:$('#mood').value,tempo:+$('#tempo').value,
-                 dur:sel.dur.s+Math.floor(Math.random()*30)-10,created:Date.now()};
-        songs.unshift(s); credits--; save(); renderCredits();
-        $('#title').value=''; ly.value=''; ly.dispatchEvent(new Event('input'));
-        toast('¡Canción lista! Está en tu biblioteca.');
-        go('biblioteca'); load(s, true);
-      },600);
-    })();
+
+  async function record({title,lyrics}){
+    recording=true; $('#recordBtn').disabled=true;
+    const s={id:Date.now(), title, lyrics:sel.voice==='Instrumental'?'':lyrics, genre:sel.genre, voice:sel.voice,
+             mood:$('#mood').value, tempo:+$('#tempo').value, status:'sending', created:Date.now()};
+    modal.open(title);
+    try{
+      const r = await api('generate-song',{method:'POST', body:JSON.stringify({
+        prompt:buildPrompt(s), lyrics:s.lyrics, gender:VOICE_GENDER[s.voice]||'', requestId:String(s.id)
+      })});
+      s.jobId=r.jobId; s.status='pending';
+      songs.unshift(s); credits--; save(); renderCredits(); renderLibrary();
+      $('#title').value=''; ly.value=''; ly.dispatchEvent(new Event('input'));
+      modal.at(1);
+      await waitFor(s, true);
+    }catch(e){
+      modal.close(); toast(e.message);
+    }finally{
+      recording=false; $('#recordBtn').disabled=false;
+    }
   }
 
-  /* ---------- library ---------- */
+  // Pregunta a Soundverse cada 5 s hasta que la canción esté lista (máx. ~10 min).
+  async function waitFor(s, withModal){
+    const start=Date.now();
+    while(Date.now()-start < 10*60*1000){
+      await sleep(5000);
+      let r;
+      try{ r = await api('song-status?id='+encodeURIComponent(s.jobId)); }
+      catch(e){ continue; }
+      if(r.status==='completed' && r.tracks){ finish(s, r.tracks); if(withModal){ modal.at(4); setTimeout(()=>modal.close(),500); } return; }
+      if(r.status==='failed' || r.error){ fail(s, r.error); if(withModal) modal.close(); return; }
+      if(withModal) modal.at(r.status==='processing' ? (Date.now()-start>60000 ? 3 : 2) : 1);
+    }
+    if(withModal){ modal.close(); toast('La canción tarda más de lo normal. Revisa tu biblioteca en unos minutos.'); go('biblioteca'); }
+  }
+  function finish(s, tracks){
+    s.status='ready'; s.fileIds=tracks.map(t=>t.fileId); if(tracks[0].duration) s.dur=tracks[0].duration;
+    save(); renderLibrary();
+    toast(`¡"${s.title}" está lista!`);
+    if(!playing){ go('biblioteca'); load(s, true, tracks[0].url); }
+  }
+  function fail(s, msg){
+    s.status='failed'; credits++; save(); renderCredits(); renderLibrary();
+    toast('No se pudo grabar "'+s.title+'". Te devolvimos la canción. '+(msg?'('+msg+')':''));
+  }
+  async function checkNow(s){
+    toast('Revisando…');
+    try{
+      const r = await api('song-status?id='+encodeURIComponent(s.jobId));
+      if(r.status==='completed' && r.tracks) finish(s, r.tracks);
+      else if(r.status==='failed' || r.error) fail(s, r.error);
+      else toast('Todavía se está grabando. Intenta en un minuto.');
+    }catch(e){ toast(e.message); }
+  }
+  async function freshUrl(s){
+    const r = await api('song-status?id='+encodeURIComponent(s.jobId));
+    const t = r.tracks && r.tracks[0];
+    if(!t || !t.url) throw new Error('No se pudo obtener el audio. Intenta de nuevo.');
+    return t.url;
+  }
+
+  /* ---------- biblioteca ---------- */
   $('#search').oninput=renderLibrary;
   function renderLibrary(){
     const q=$('#search').value.toLowerCase();
@@ -485,82 +586,102 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     $('#libCount').textContent=`${songs.length} canción${songs.length===1?'':'es'}`;
     const lib=$('#library');
     if(!list.length){ lib.innerHTML=`<div class="empty" style="grid-column:1/-1">${songs.length?'No se encontraron canciones.':'Tu biblioteca está vacía.<br><br><button class="btn btn-primary" data-go="crear">Crear mi primera canción</button>'}</div>`; return; }
-    lib.innerHTML=list.map(s=>`
-      <div class="song ${current&&current.id===s.id&&playing?'playing':''}" data-id="${s.id}">
+    lib.innerHTML=list.map(s=>{
+      const isCur=current&&current.id===s.id&&playing;
+      let btn, meta;
+      if(s.status==='ready'){ btn=`<button class="play" data-act="play" aria-label="Reproducir">${isCur?'❚❚':'▶'}</button>`; meta=`${esc(s.genre)} · ${fmt(s.dur)}`; }
+      else if(s.status==='failed'){ btn=''; meta=`<span class="badge fail">Falló</span>`; }
+      else { btn=`<button class="play" data-act="check" aria-label="Revisar" title="Revisar si ya está lista">⟳</button>`; meta=`<span class="badge">Grabando…</span>`; }
+      return `
+      <div class="song ${isCur?'playing':''} ${s.status==='pending'?'pending':''}" data-id="${s.id}">
         <div class="cover" style="background:${coverBg(s)}">
-          <div class="disc"><i style="background:${coverBg(s)}"></i></div>
-          <button class="play" data-act="play" aria-label="Reproducir">${current&&current.id===s.id&&playing?'❚❚':'▶'}</button>
+          <div class="disc"><i style="background:${coverBg(s)}"></i></div>${btn}
         </div>
         <div class="meta">
           <div class="t">${esc(s.title)}</div>
-          <div class="s"><span>${esc(s.genre)} · ${fmt(s.dur)}</span><button class="del" data-act="del" aria-label="Eliminar">✕</button></div>
+          <div class="s"><span>${meta}</span><span class="acts">${s.status==='ready'?'<button class="dl" data-act="dl" aria-label="Descargar" title="Descargar">⬇</button>':''}<button class="del" data-act="del" aria-label="Eliminar" title="Eliminar">✕</button></span></div>
         </div>
-      </div>`).join('');
+      </div>`;}).join('');
   }
-  $('#library').addEventListener('click',e=>{
+  $('#library').addEventListener('click',async e=>{
     const b=e.target.closest('[data-act]'); if(!b) return;
-    const s=songs.find(x=>x.id==b.closest('.song').dataset.id);
-    if(b.dataset.act==='play'){ if(current&&current.id===s.id) toggle(); else load(s,true); }
-    if(b.dataset.act==='del' && confirm(`¿Eliminar "${s.title}"?`)){
+    const s=songs.find(x=>x.id==b.closest('.song').dataset.id); if(!s) return;
+    const act=b.dataset.act;
+    if(act==='play'){ if(current&&current.id===s.id) toggle(); else load(s,true); }
+    if(act==='check') checkNow(s);
+    if(act==='dl'){ try{ toast('Preparando descarga…'); window.open(await freshUrl(s),'_blank'); }catch(err){ toast(err.message); } }
+    if(act==='del' && confirm(`¿Eliminar "${s.title}" de tu biblioteca?`)){
       songs=songs.filter(x=>x.id!==s.id); save();
       if(current&&current.id===s.id){ stop(); current=null; resetPlayer(); }
       renderLibrary();
     }
   });
 
-  /* ---------- player (simulated playback) ---------- */
-  let current=null, playing=false, pos=0, timer=null;
+  /* ---------- reproductor con audio real ---------- */
+  const audio=new Audio(); audio.preload='auto';
+  let current=null, playing=false, meterTimer=null;
   const meters=$('#meters'); for(let i=0;i<14;i++) meters.appendChild(document.createElement('i'));
-  function resetPlayer(){ $('#pTitle').textContent='Nada sonando'; $('#pSub').textContent='Elige una canción'; $('#pCover').style.background='var(--panel-2)'; $('#tot').textContent='0:00'; $('#cur').textContent='0:00'; $('#fill').style.width='0'; }
-  function load(s,autoplay){
-    current=s; pos=0;
+  function resetPlayer(){ audio.removeAttribute('src'); audio.load(); $('#pTitle').textContent='Nada sonando'; $('#pSub').textContent='Elige una canción'; $('#pCover').style.background='var(--panel-2)'; $('#tot').textContent='0:00'; $('#cur').textContent='0:00'; $('#fill').style.width='0'; }
+  async function load(s, autoplay, url){
+    if(s.status!=='ready'){ toast('Esa canción todavía no está lista'); return; }
+    current=s;
     $('#pTitle').textContent=s.title; $('#pSub').textContent=`${s.genre} · ${s.voice}`;
-    $('#pCover').style.background=coverBg(s); $('#tot').textContent=fmt(s.dur); update();
-    if(autoplay) play();
+    $('#pCover').style.background=coverBg(s); $('#tot').textContent=fmt(s.dur); $('#cur').textContent='0:00'; $('#fill').style.width='0';
+    try{
+      $('#pSub').textContent='Cargando…';
+      audio.src = url || await freshUrl(s);
+      $('#pSub').textContent=`${s.genre} · ${s.voice}`;
+      if(autoplay) await audio.play();
+    }catch(e){ $('#pSub').textContent=`${s.genre} · ${s.voice}`; toast(e.message && !/play\(\)/.test(e.message) ? e.message : 'Toca ▶ para reproducir'); }
   }
   function play(){
-    if(!current){ if(songs.length) load(songs[0]); else { toast('Crea una canción primero'); return; } }
-    playing=true; setIcon(); clearInterval(timer);
-    timer=setInterval(()=>{ pos+=0.25; if(pos>=current.dur){ nextSong(); return; } update(); animMeters(); },250);
-    renderLibrary();
+    if(!current){ const f=songs.find(x=>x.status==='ready'); if(f) load(f,true); else toast('Crea una canción primero'); return; }
+    audio.play().catch(()=>toast('No se pudo reproducir. Intenta de nuevo.'));
   }
-  function stop(){ playing=false; clearInterval(timer); setIcon(); [...meters.children].forEach(m=>m.style.height='4px'); renderLibrary(); }
+  function stop(){ audio.pause(); }
   function toggle(){ playing?stop():play(); }
   function setIcon(){ $('#playIco').innerHTML=playing?'<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>':'<path d="M7 4v16l13-8z"/>'; }
-  function update(){ $('#cur').textContent=fmt(pos); $('#fill').style.width=(current?pos/current.dur*100:0)+'%'; }
-  function animMeters(){ [...meters.children].forEach(m=>m.style.height=(6+Math.random()*28)+'px'); }
-  function step(d){ if(!songs.length) return; const i=current?songs.findIndex(x=>x.id===current.id):-1; load(songs[(i+d+songs.length)%songs.length], true); }
-  function nextSong(){ step(1); }
-  $('#playBtn').onclick=toggle; $('#next').onclick=()=>step(1); $('#prev').onclick=()=>{ if(pos>3){pos=0;update();} else step(-1); };
-  $('#rail').onclick=e=>{ if(!current) return; const r=e.currentTarget.getBoundingClientRect(); pos=(e.clientX-r.left)/r.width*current.dur; update(); };
+  audio.addEventListener('play',()=>{ playing=true; setIcon(); renderLibrary(); clearInterval(meterTimer); meterTimer=setInterval(()=>[...meters.children].forEach(m=>m.style.height=(6+Math.random()*28)+'px'),120); });
+  audio.addEventListener('pause',()=>{ playing=false; setIcon(); renderLibrary(); clearInterval(meterTimer); [...meters.children].forEach(m=>m.style.height='4px'); });
+  audio.addEventListener('loadedmetadata',()=>{ if(current && isFinite(audio.duration)){ current.dur=audio.duration; save(); $('#tot').textContent=fmt(audio.duration); } });
+  audio.addEventListener('timeupdate',()=>{ $('#cur').textContent=fmt(audio.currentTime); $('#fill').style.width=(audio.duration?audio.currentTime/audio.duration*100:0)+'%'; });
+  audio.addEventListener('ended',()=>step(1));
+  audio.addEventListener('error',()=>{ if(current && audio.src) toast('El enlace de audio venció. Toca ▶ otra vez.'); });
+  function step(d){
+    const ready=songs.filter(x=>x.status==='ready'); if(!ready.length) return;
+    const i=current?ready.findIndex(x=>x.id===current.id):-1;
+    load(ready[(i+d+ready.length)%ready.length], true);
+  }
+  $('#playBtn').onclick=toggle; $('#next').onclick=()=>step(1);
+  $('#prev').onclick=()=>{ if(audio.currentTime>3) audio.currentTime=0; else step(-1); };
+  $('#rail').onclick=e=>{ if(!current||!audio.duration) return; const r=e.currentTarget.getBoundingClientRect(); audio.currentTime=(e.clientX-r.left)/r.width*audio.duration; };
 
-  /* ---------- plans ---------- */
+  /* ---------- planes ---------- */
   $$('[data-plan]').forEach(b=>b.onclick=()=>{
     if(b.dataset.plan==='Demo'){ toast('Ya estás en el plan Demo'); return; }
     toast(`Los pagos para el plan ${b.dataset.plan} se activan pronto.`);
   });
 
-  /* ---------- profile ---------- */
+  /* ---------- perfil ---------- */
   function renderProfile(){
     $('#uname').value=profile.name; $('#uemail').value=profile.email;
-    $('#statSongs').textContent=songs.length; $('#statCredits').textContent=credits; $('#statPlan').textContent=plan;
+    $('#statSongs').textContent=songs.filter(s=>s.status==='ready').length; $('#statCredits').textContent=credits; $('#statPlan').textContent=plan;
   }
   $('#saveProfile').onclick=()=>{ profile={name:$('#uname').value.trim(),email:$('#uemail').value.trim()}; store.set('profile',profile); toast('Perfil guardado'); };
-  $('#resetBtn').onclick=()=>{ if(!confirm('¿Reiniciar la demo? Se borrarán tus canciones de prueba.')) return; stop(); songs=[...seed]; credits=2; plan='Demo'; current=null; save(); resetPlayer(); renderCredits(); renderProfile(); toast('Demo reiniciada'); };
+  $('#resetBtn').onclick=()=>{ if(!confirm('¿Reiniciar la demo? Se borrará tu biblioteca de este navegador y volverás a tener 2 canciones.')) return; stop(); songs=[]; credits=2; plan='Demo'; current=null; save(); resetPlayer(); renderCredits(); renderProfile(); toast('Demo reiniciada'); };
 
-  /* ---------- hero console animation ---------- */
+  /* ---------- animación de la consola ---------- */
   const fd=$('#faders');
   ['VOZ','BAJO','BAT','GTR','KEYS','FX'].forEach(n=>{ fd.insertAdjacentHTML('beforeend',`<div class="fader"><div class="track"><div class="cap"></div></div><span>${n}</span></div>`); });
-  function heroAnim(){
-    $$('.fader .cap').forEach(c=>c.style.bottom=(15+Math.random()*80)+'px');
-    ['#n1','#n2'].forEach(n=>$(n).style.transform=`rotate(${-40+Math.random()*70}deg)`);
-  }
+  function heroAnim(){ $$('.fader .cap').forEach(c=>c.style.bottom=(15+Math.random()*80)+'px'); }
   heroAnim(); setInterval(heroAnim,1300);
   setInterval(()=>['#n1','#n2'].forEach(n=>$(n).style.transform=`rotate(${-30+Math.random()*55}deg)`),220);
 
-  /* ---------- init ---------- */
+  /* ---------- inicio ---------- */
   renderCredits();
   go(location.hash.slice(1)||'inicio');
+  // Si quedaron canciones grabándose (se cerró la página), seguir revisándolas en segundo plano.
+  if(songs.some(s=>s.status==='pending') && store.get('code','')) songs.filter(s=>s.status==='pending').forEach(s=>waitFor(s,false));
 })();
 </script>
 </body>
