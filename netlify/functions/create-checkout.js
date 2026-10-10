@@ -22,6 +22,12 @@ exports.handler = async (event) => {
     if (profile.plan && profile.plan !== 'demo') return json(409, { error: 'AlreadySubscribed' });
 
     let customer = profile.stripe_customer_id;
+    // Un cliente guardado en modo prueba no existe en modo real (y al revés): si Stripe no lo
+    // reconoce, se crea uno nuevo en vez de fallar el pago.
+    if (customer) {
+      try { const c = await stripe.call('GET', `/customers/${encodeURIComponent(customer)}`); if (c.deleted) customer = null; }
+      catch (e) { if (/: 404 |No such customer/i.test(String(e.message))) customer = null; else throw e; }
+    }
     if (!customer) {
       const c = await stripe.call('POST', '/customers', { email: user.email, metadata: { user_id: user.id } });
       customer = c.id;
