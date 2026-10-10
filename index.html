@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#0f0d0b; --panel:#1a1714; --panel-2:#221e1a; --line:#332d26;
@@ -160,6 +161,14 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 /* Modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;place-items:center;z-index:50;padding:16px}
 .modal.show{display:grid}
+.auth-tabs{display:flex;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin:18px 0}
+.auth-tabs button{flex:1;padding:9px;border-radius:999px;color:var(--muted);font-weight:600;font-size:14px}
+.auth-tabs button.on{background:var(--amber);color:#1a1206}
+#auth .field{text-align:left;margin-bottom:14px}
+#authMsg{min-height:20px;font-size:13px;margin:4px 0 12px;color:var(--red)}
+#authMsg.ok{color:var(--green)}
+.linkbtn{color:var(--muted);font-size:13px;text-decoration:underline;margin-top:12px}
+.linkbtn:hover{color:var(--amber)}
 .studio{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:28px;text-align:center}
 .onair-sign{display:inline-block;font:600 14px var(--mono);letter-spacing:3px;color:#fff;background:var(--red);padding:6px 16px;border-radius:6px;box-shadow:0 0 24px rgba(226,81,60,.6);animation:blink 1.4s infinite;margin-bottom:18px}
 .steps{text-align:left;display:grid;gap:12px;margin:22px 0}
@@ -338,11 +347,11 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       <div class="profile-grid">
         <div class="card">
           <div class="field"><label for="uname">Nombre artístico</label><input class="input" id="uname" placeholder="Tu nombre"></div>
-          <div class="field" style="margin-bottom:0"><label for="uemail">Correo electrónico</label><input class="input" id="uemail" type="email" placeholder="tu@correo.com"></div>
+          <div class="field" style="margin-bottom:0"><label for="uemail">Correo electrónico</label><input class="input" id="uemail" type="email" disabled></div>
           <button class="btn btn-primary" id="saveProfile" style="margin-top:18px">Guardar</button>
         </div>
         <div class="card"><label class="counter">CANCIONES CREADAS</label><div class="stat" id="statSongs">0</div><label class="counter">CANCIONES DISPONIBLES</label><div class="stat" id="statCredits">0</div></div>
-        <div class="card"><label class="counter">PLAN ACTUAL</label><div class="stat" id="statPlan">Demo</div><p class="hint" style="margin-bottom:14px">Las cuentas y los pagos reales se activan en las próximas fases.</p><button class="btn btn-ghost" id="resetBtn">Reiniciar demo</button></div>
+        <div class="card"><label class="counter">PLAN ACTUAL</label><div class="stat" id="statPlan">Demo</div><p class="hint" style="margin-bottom:14px">Los pagos de los planes se activan pronto.</p><button class="btn btn-ghost" id="logoutBtn">Cerrar sesión</button></div>
       </div>
     </section>
   </main>
@@ -378,6 +387,23 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   </div>
 </div>
 
+<!-- AUTH -->
+<div class="modal" id="auth">
+  <div class="studio">
+    <div class="onair-sign" style="font-size:13px">BRIELLE STUDIO</div>
+    <h2 id="authTitle">Entra al estudio</h2>
+    <p class="sub" style="margin:0" id="authSub">Inicia sesión para crear y guardar tus canciones.</p>
+    <div class="auth-tabs" id="authTabs"><button data-m="login" class="on">Entrar</button><button data-m="signup">Crear cuenta</button></div>
+    <form id="authForm" novalidate>
+      <div class="field" id="fEmail"><label for="aEmail">Correo electrónico</label><input class="input" id="aEmail" type="email" autocomplete="email" placeholder="tu@correo.com"></div>
+      <div class="field" id="fPass"><label for="aPass" id="aPassLbl">Contraseña</label><input class="input" id="aPass" type="password" autocomplete="current-password" placeholder="Mínimo 8 caracteres"></div>
+      <div id="authMsg" role="alert"></div>
+      <button class="btn btn-primary" id="authGo" type="submit" style="width:100%">Entrar</button>
+    </form>
+    <button class="linkbtn" id="forgotBtn" type="button">Olvidé mi contraseña</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -398,10 +424,13 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const VOICE_PROMPT = {'Masculina':'male vocals','Femenina':'female vocals','Dúo':'male and female duet vocals','Coro':'choir vocals','Instrumental':'instrumental, no vocals'};
   const VOICE_GENDER = {'Masculina':'male','Femenina':'female'};
 
-  let songs = store.get('songs_v2', []);
-  let credits = store.get('credits', 2);
-  let plan = store.get('plan', 'Demo');
-  let profile = store.get('profile', {name:'',email:''});
+  // Estos dos valores son públicos por diseño (la seguridad la dan las reglas RLS de la base de datos).
+  const SUPA_URL = 'https://poxudjzlzagkorjfwxum.supabase.co';
+  const SUPA_KEY = 'sb_publishable_66tPqOSkemwBztB1cyxPIA_ZoqWDLYH';
+  const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+  const PLAN_NAME = {demo:'Demo', estudio:'Estudio', productor:'Productor'};
+
+  let songs = [], credits = 0, plan = 'Demo', profile = {name:'',email:''}, me = null;
   const sel = {genre:'Balada', voice:'Masculina'};
 
   /* ---------- helpers ---------- */
@@ -411,34 +440,42 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
   function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3200); }
-  function save(){ store.set('songs_v2',songs); store.set('credits',credits); store.set('plan',plan); }
+  const polling = new Set();
+  // Convierte una fila de la base de datos al formato que usa la interfaz.
+  const norm = r => ({id:r.id, title:r.title, genre:r.genre||'', voice:r.voice||'', mood:r.mood||'', lyrics:r.lyrics||'',
+    dur:r.duration, audio:r.audio_path, created:Date.parse(r.created_at),
+    status: r.status==='completed' ? 'ready' : r.status==='failed' ? 'failed' : 'pending'});
+  async function loadSongs(){
+    const {data,error} = await sb.from('songs').select('*').order('created_at',{ascending:false});
+    if(error){ toast('No se pudo cargar tu biblioteca.'); return; }
+    songs = data.map(norm);
+  }
+  async function loadProfile(){
+    const {data} = await sb.from('profiles').select('*').eq('id',me.id).maybeSingle();
+    if(data){ credits=data.credits; plan=PLAN_NAME[data.plan]||'Demo'; profile={name:data.display_name||'',email:data.email||me.email||''}; }
+    else profile={name:'',email:me.email||''};
+    renderCredits();
+  }
 
   /* ---------- servidor (funciones de Netlify) ---------- */
-  function getCode(){
-    let c = store.get('code','');
-    if(!c){
-      c = (prompt('Brielle está en fase de pruebas.\nEscribe el código de acceso:')||'').trim();
-      if(c) store.set('code',c);
-    }
-    return c;
-  }
   function friendly(d){
     const e = d && d.error;
+    if(e==='NoCredits') return 'No te quedan canciones disponibles. Elige un plan para seguir creando.';
     if(e==='InsufficientFunds') return 'El estudio se quedó sin saldo en Soundverse. Hay que recargar la billetera.';
     if(e==='RateLimited') return 'Demasiadas grabaciones seguidas. Espera un momento e intenta de nuevo.';
     if(e==='InvalidGenerationInput') return 'Soundverse no aceptó los datos: ' + (d.message||'revisa la letra.');
     return (d && (d.message || d.error)) || 'Algo salió mal. Intenta de nuevo.';
   }
   async function api(path, opts={}){
-    const code = getCode();
-    if(!code) throw new Error('Necesitas el código de acceso para grabar.');
+    const {data:{session}} = await sb.auth.getSession();
+    if(!session){ showAuth('login'); const e=new Error('Inicia sesión para continuar.'); e.auth=true; throw e; }
     let res;
     try{
-      res = await fetch('/.netlify/functions/'+path, {...opts, headers:{'Content-Type':'application/json','x-brielle-code':code}});
+      res = await fetch('/.netlify/functions/'+path, {...opts, headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token}});
     }catch(e){ throw new Error('Sin conexión con el estudio. Revisa tu internet.'); }
     const data = await res.json().catch(()=>({}));
-    if(res.status===401){ store.del('code'); throw new Error('Código de acceso incorrecto. Vuelve a intentarlo.'); }
-    if(!res.ok) throw new Error(friendly(data));
+    if(res.status===401){ showAuth('login'); const e=new Error('Tu sesión venció. Entra de nuevo.'); e.auth=true; throw e; }
+    if(!res.ok){ const e=new Error(friendly(data)); e.code=data.error; throw e; }
     return data;
   }
 
@@ -519,63 +556,71 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 
   async function record({title,lyrics}){
     recording=true; $('#recordBtn').disabled=true;
-    const s={id:Date.now(), title, lyrics:sel.voice==='Instrumental'?'':lyrics, genre:sel.genre, voice:sel.voice,
-             mood:$('#mood').value, tempo:+$('#tempo').value, status:'sending', created:Date.now()};
+    const s={title, lyrics:sel.voice==='Instrumental'?'':lyrics, genre:sel.genre, voice:sel.voice,
+             mood:$('#mood').value, tempo:+$('#tempo').value};
     modal.open(title);
     try{
       const r = await api('generate-song',{method:'POST', body:JSON.stringify({
-        prompt:buildPrompt(s), lyrics:s.lyrics, gender:VOICE_GENDER[s.voice]||'', requestId:String(s.id)
+        title:s.title, genre:s.genre, voice:s.voice, mood:s.mood, tempo:s.tempo,
+        prompt:buildPrompt(s), lyrics:s.lyrics, gender:VOICE_GENDER[s.voice]||''
       })});
-      s.jobId=r.jobId; s.status='pending';
-      songs.unshift(s); credits--; save(); renderCredits(); renderLibrary();
+      const ns = norm(r.song); songs.unshift(ns); credits=r.credits; renderCredits(); renderLibrary();
       $('#title').value=''; ly.value=''; ly.dispatchEvent(new Event('input'));
       modal.at(1);
-      await waitFor(s, true);
+      await waitFor(ns, true);
     }catch(e){
       modal.close(); toast(e.message);
+      if(e.code==='NoCredits'){ loadProfile(); go('planes'); }
     }finally{
       recording=false; $('#recordBtn').disabled=false;
     }
   }
 
-  // Pregunta a Soundverse cada 5 s hasta que la canción esté lista (máx. ~10 min).
+  // Pregunta al servidor cada 5 s hasta que la canción esté lista (máx. ~10 min).
   async function waitFor(s, withModal){
-    const start=Date.now();
-    while(Date.now()-start < 10*60*1000){
-      await sleep(5000);
-      let r;
-      try{ r = await api('song-status?id='+encodeURIComponent(s.jobId)); }
-      catch(e){ continue; }
-      if(r.status==='completed' && r.tracks){ finish(s, r.tracks); if(withModal){ modal.at(4); setTimeout(()=>modal.close(),500); } return; }
-      if(r.status==='failed' || r.error){ fail(s, r.error); if(withModal) modal.close(); return; }
-      if(withModal) modal.at(r.status==='processing' ? (Date.now()-start>60000 ? 3 : 2) : 1);
-    }
-    if(withModal){ modal.close(); toast('La canción tarda más de lo normal. Revisa tu biblioteca en unos minutos.'); go('biblioteca'); }
+    if(polling.has(s.id)) return;
+    polling.add(s.id);
+    try{
+      const start=Date.now();
+      while(Date.now()-start < 10*60*1000){
+        await sleep(5000);
+        if(!me) return;
+        let r;
+        try{ r = await api('song-status?id='+encodeURIComponent(s.id)); }
+        catch(e){ if(e.auth){ if(withModal) modal.close(); return; } continue; }
+        if(r.status==='completed'){ await finish(s); if(withModal){ modal.at(4); setTimeout(()=>modal.close(),500); } return; }
+        if(r.status==='failed'){ await fail(s, r.error); if(withModal) modal.close(); return; }
+        if(withModal) modal.at(Date.now()-start>60000 ? 3 : 2);
+      }
+      if(withModal){ modal.close(); toast('La canción tarda más de lo normal. Revisa tu biblioteca en unos minutos.'); go('biblioteca'); }
+    } finally { polling.delete(s.id); }
   }
-  function finish(s, tracks){
-    s.status='ready'; s.fileIds=tracks.map(t=>t.fileId); if(tracks[0].duration) s.dur=tracks[0].duration;
-    save(); renderLibrary();
-    toast(`¡"${s.title}" está lista!`);
-    if(!playing){ go('biblioteca'); load(s, true, tracks[0].url); }
+  async function finish(s){
+    await Promise.all([loadSongs(), loadProfile()]);
+    const ns = songs.find(x=>x.id===s.id); if(!ns) return;
+    renderLibrary();
+    toast(`¡"${ns.title}" está lista!`);
+    if(!playing){ go('biblioteca'); load(ns, true); }
   }
-  function fail(s, msg){
-    s.status='failed'; credits++; save(); renderCredits(); renderLibrary();
+  async function fail(s, msg){
+    await Promise.all([loadSongs(), loadProfile()]); renderLibrary();
     toast('No se pudo grabar "'+s.title+'". Te devolvimos la canción. '+(msg?'('+msg+')':''));
   }
   async function checkNow(s){
     toast('Revisando…');
     try{
-      const r = await api('song-status?id='+encodeURIComponent(s.jobId));
-      if(r.status==='completed' && r.tracks) finish(s, r.tracks);
-      else if(r.status==='failed' || r.error) fail(s, r.error);
+      const r = await api('song-status?id='+encodeURIComponent(s.id));
+      if(r.status==='completed') await finish(s);
+      else if(r.status==='failed') await fail(s, r.error);
       else toast('Todavía se está grabando. Intenta en un minuto.');
     }catch(e){ toast(e.message); }
   }
-  async function freshUrl(s){
-    const r = await api('song-status?id='+encodeURIComponent(s.jobId));
-    const t = r.tracks && r.tracks[0];
-    if(!t || !t.url) throw new Error('No se pudo obtener el audio. Intenta de nuevo.');
-    return t.url;
+  async function freshUrl(s, download){
+    if(!s.audio) throw new Error('El audio todavía no está disponible.');
+    const ext = (s.audio.match(/\.(\w+)$/)||[])[1]||'mp3';
+    const {data,error} = await sb.storage.from('songs').createSignedUrl(s.audio, 3600, download?{download:`${s.title}.${ext}`}:undefined);
+    if(error||!data) throw new Error('No se pudo obtener el audio. Intenta de nuevo.');
+    return data.signedUrl;
   }
 
   /* ---------- biblioteca ---------- */
@@ -609,9 +654,13 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     const act=b.dataset.act;
     if(act==='play'){ if(current&&current.id===s.id) toggle(); else load(s,true); }
     if(act==='check') checkNow(s);
-    if(act==='dl'){ try{ toast('Preparando descarga…'); window.open(await freshUrl(s),'_blank'); }catch(err){ toast(err.message); } }
+    if(act==='dl'){ try{ toast('Preparando descarga…'); window.open(await freshUrl(s,true),'_blank'); }catch(err){ toast(err.message); } }
+    if(act==='del' && s.status==='pending'){ toast('Espera a que termine de grabarse antes de eliminarla.'); return; }
     if(act==='del' && confirm(`¿Eliminar "${s.title}" de tu biblioteca?`)){
-      songs=songs.filter(x=>x.id!==s.id); save();
+      if(s.audio) await sb.storage.from('songs').remove([s.audio]);
+      const {error} = await sb.from('songs').delete().eq('id',s.id);
+      if(error){ toast('No se pudo eliminar. Intenta de nuevo.'); return; }
+      songs=songs.filter(x=>x.id!==s.id);
       if(current&&current.id===s.id){ stop(); current=null; resetPlayer(); }
       renderLibrary();
     }
@@ -643,7 +692,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   function setIcon(){ $('#playIco').innerHTML=playing?'<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>':'<path d="M7 4v16l13-8z"/>'; }
   audio.addEventListener('play',()=>{ playing=true; setIcon(); renderLibrary(); clearInterval(meterTimer); meterTimer=setInterval(()=>[...meters.children].forEach(m=>m.style.height=(6+Math.random()*28)+'px'),120); });
   audio.addEventListener('pause',()=>{ playing=false; setIcon(); renderLibrary(); clearInterval(meterTimer); [...meters.children].forEach(m=>m.style.height='4px'); });
-  audio.addEventListener('loadedmetadata',()=>{ if(current && isFinite(audio.duration)){ current.dur=audio.duration; save(); $('#tot').textContent=fmt(audio.duration); } });
+  audio.addEventListener('loadedmetadata',()=>{ if(current && isFinite(audio.duration)){ current.dur=audio.duration; $('#tot').textContent=fmt(audio.duration); } });
   audio.addEventListener('timeupdate',()=>{ $('#cur').textContent=fmt(audio.currentTime); $('#fill').style.width=(audio.duration?audio.currentTime/audio.duration*100:0)+'%'; });
   audio.addEventListener('ended',()=>step(1));
   audio.addEventListener('error',()=>{ if(current && audio.src) toast('El enlace de audio venció. Toca ▶ otra vez.'); });
@@ -667,8 +716,89 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     $('#uname').value=profile.name; $('#uemail').value=profile.email;
     $('#statSongs').textContent=songs.filter(s=>s.status==='ready').length; $('#statCredits').textContent=credits; $('#statPlan').textContent=plan;
   }
-  $('#saveProfile').onclick=()=>{ profile={name:$('#uname').value.trim(),email:$('#uemail').value.trim()}; store.set('profile',profile); toast('Perfil guardado'); };
-  $('#resetBtn').onclick=()=>{ if(!confirm('¿Reiniciar la demo? Se borrará tu biblioteca de este navegador y volverás a tener 2 canciones.')) return; stop(); songs=[]; credits=2; plan='Demo'; current=null; save(); resetPlayer(); renderCredits(); renderProfile(); toast('Demo reiniciada'); };
+  $('#saveProfile').onclick=async()=>{
+    const name=$('#uname').value.trim().slice(0,60);
+    const {error}=await sb.from('profiles').update({display_name:name}).eq('id',me.id);
+    if(error){ toast('No se pudo guardar. Intenta de nuevo.'); return; }
+    profile.name=name; toast('Perfil guardado');
+  };
+  $('#logoutBtn').onclick=()=>sb.auth.signOut();
+
+  /* ---------- cuentas (Supabase Auth) ---------- */
+  let authMode='login';
+  const AUTH_ERR = [
+    [/invalid login/i,'Correo o contraseña incorrectos.'],
+    [/not confirmed/i,'Primero confirma tu correo (te enviamos un enlace).'],
+    [/already registered|already been registered/i,'Ese correo ya tiene cuenta. Usa "Entrar".'],
+    [/at least|weak/i,'La contraseña es muy corta o débil (mínimo 8 caracteres).'],
+    [/rate limit|too many|security purposes/i,'Demasiados intentos. Espera unos minutos.'],
+    [/invalid.*email|valid email/i,'Escribe un correo válido.']
+  ];
+  const authErr = e => { const m=(e&&e.message)||''; const f=AUTH_ERR.find(x=>x[0].test(m)); return f?f[1]:'No se pudo completar. Intenta de nuevo.'; };
+  const authMsg = (t,ok)=>{ const m=$('#authMsg'); m.textContent=t||''; m.classList.toggle('ok',!!ok); };
+  function showAuth(mode){
+    authMode = mode||authMode;
+    const rec = authMode==='recovery';
+    $('#authTabs').style.display = rec?'none':'flex';
+    $('#forgotBtn').style.display = authMode==='login'?'':'none';
+    $('#fEmail').style.display = rec?'none':'';
+    $$('#authTabs button').forEach(b=>b.classList.toggle('on', b.dataset.m===authMode));
+    $('#authTitle').textContent = rec?'Nueva contraseña':authMode==='signup'?'Crea tu cuenta':'Entra al estudio';
+    $('#authSub').textContent = rec?'Escribe tu nueva contraseña.':authMode==='signup'?'Empiezas con 2 canciones de regalo.':'Inicia sesión para crear y guardar tus canciones.';
+    $('#aPassLbl').textContent = rec?'Nueva contraseña':'Contraseña';
+    $('#aPass').autocomplete = authMode==='login'?'current-password':'new-password';
+    $('#authGo').textContent = rec?'Guardar contraseña':authMode==='signup'?'Crear cuenta':'Entrar';
+    authMsg(''); $('#auth').classList.add('show');
+  }
+  const hideAuth = ()=>$('#auth').classList.remove('show');
+  $('#authTabs').onclick=e=>{ const b=e.target.closest('button'); if(b) showAuth(b.dataset.m); };
+  $('#forgotBtn').onclick=async()=>{
+    const email=$('#aEmail').value.trim();
+    if(!email){ authMsg('Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña".'); return; }
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin});
+    error ? authMsg(authErr(error)) : authMsg('Te enviamos un correo para cambiar tu contraseña.',true);
+  };
+  $('#authForm').onsubmit=async e=>{
+    e.preventDefault();
+    const email=$('#aEmail').value.trim(), pass=$('#aPass').value;
+    if(authMode!=='recovery' && !/^\S+@\S+\.\S+$/.test(email)){ authMsg('Escribe un correo válido.'); return; }
+    if(authMode!=='login' && pass.length<8){ authMsg('La contraseña debe tener mínimo 8 caracteres.'); return; }
+    if(!pass){ authMsg('Escribe tu contraseña.'); return; }
+    $('#authGo').disabled=true; authMsg('');
+    try{
+      if(authMode==='recovery'){
+        const {error}=await sb.auth.updateUser({password:pass}); if(error) throw error;
+        toast('Contraseña actualizada'); hideAuth(); history.replaceState(null,'',location.pathname+'#inicio');
+      } else if(authMode==='signup'){
+        const {data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:location.origin}}); if(error) throw error;
+        if(!data.session) authMsg('¡Listo! Te enviamos un correo para confirmar tu cuenta. Ábrelo y luego entra.',true);
+      } else {
+        const {error}=await sb.auth.signInWithPassword({email,password:pass}); if(error) throw error;
+      }
+    }catch(err){ authMsg(authErr(err)); }
+    $('#authGo').disabled=false;
+  };
+
+  async function enter(user){
+    me=user; if(authMode!=='recovery') hideAuth();
+    await Promise.all([loadProfile(), loadSongs()]);
+    renderCredits(); renderLibrary();
+    const v=location.hash.slice(1); go(v&&v!=='access_token'&&!v.includes('=')?v:'inicio');
+    // Si quedaron canciones grabándose (se cerró la página), seguir revisándolas en segundo plano.
+    songs.filter(s=>s.status==='pending').forEach(s=>waitFor(s,false));
+  }
+  function leave(){
+    me=null; songs=[]; credits=0; plan='Demo'; profile={name:'',email:''}; current=null;
+    stop(); resetPlayer(); renderCredits(); renderLibrary(); $('#aPass').value=''; showAuth('login');
+  }
+  sb.auth.onAuthStateChange((ev,session)=>{
+    // Sin "await" de Supabase dentro del callback (puede bloquearse); se difiere con setTimeout.
+    setTimeout(()=>{
+      if(ev==='PASSWORD_RECOVERY'){ showAuth('recovery'); return; }
+      if(ev==='SIGNED_OUT'){ leave(); return; }
+      if(ev==='SIGNED_IN' && session && (!me || me.id!==session.user.id)) enter(session.user);
+    },0);
+  });
 
   /* ---------- animación de la consola ---------- */
   const fd=$('#faders');
@@ -679,9 +809,9 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 
   /* ---------- inicio ---------- */
   renderCredits();
-  go(location.hash.slice(1)||'inicio');
-  // Si quedaron canciones grabándose (se cerró la página), seguir revisándolas en segundo plano.
-  if(songs.some(s=>s.status==='pending') && store.get('code','')) songs.filter(s=>s.status==='pending').forEach(s=>waitFor(s,false));
+  renderLibrary();
+  showAuth('login'); // se oculta solo si ya hay sesión
+  sb.auth.getSession().then(({data:{session}})=>{ if(session && !me) enter(session.user); });
 })();
 </script>
 </body>
