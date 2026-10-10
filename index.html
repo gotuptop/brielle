@@ -129,7 +129,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
 .plan{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;display:flex;flex-direction:column}
 .plan.hot{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber),0 20px 40px rgba(242,169,59,.12);position:relative}
-.plan.hot::before{content:"MÁS POPULAR";position:absolute;top:-11px;left:24px;background:var(--amber);color:#1a1206;font:600 11px var(--mono);padding:3px 10px;border-radius:999px}
+.plan.hot::before{content:attr(data-badge);position:absolute;top:-11px;left:24px;background:var(--amber);color:#1a1206;font:600 11px var(--mono);padding:3px 10px;border-radius:999px}
 .plan .name{font-family:var(--display);font-size:30px;letter-spacing:1px}
 .plan .price{font-family:var(--mono);font-size:34px;color:var(--amber-2);margin:6px 0 2px}
 .plan .price small{font-size:14px;color:var(--muted)}
@@ -169,6 +169,9 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 #authMsg.ok{color:var(--green)}
 .linkbtn{color:var(--muted);font-size:13px;text-decoration:underline;margin-top:12px}
 .linkbtn:hover{color:var(--amber)}
+.langbtn{font:600 12px var(--mono);letter-spacing:1px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+.langbtn:hover{color:var(--amber);border-color:var(--amber)}
+@media (max-width:760px){.sidebar .langbtn{display:none}}
 .studio{width:100%;max-width:460px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:28px;text-align:center}
 .onair-sign{display:inline-block;font:600 14px var(--mono);letter-spacing:3px;color:#fff;background:var(--red);padding:6px 16px;border-radius:6px;box-shadow:0 0 24px rgba(226,81,60,.6);animation:blink 1.4s infinite;margin-bottom:18px}
 .steps{text-align:left;display:grid;gap:12px;margin:22px 0}
@@ -205,22 +208,23 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 
 <div class="mobile-top">
   <div class="logo"><span class="reel"></span>BRIELLE</div>
-  <span class="counter">Canciones: <b id="creditsMobile" style="color:var(--amber-2)">0</b></span>
+  <span style="display:flex;align-items:center;gap:12px"><button class="langbtn" data-lang-toggle aria-label="Language"></button><span class="counter"><span data-i18n="songs.label">Canciones:</span> <b id="creditsMobile" style="color:var(--amber-2)">0</b></span></span>
 </div>
 
 <div class="app">
   <aside class="sidebar">
     <div class="logo"><span class="reel"></span>BRIELLE</div>
-    <button class="nav-btn" data-go="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
-    <button class="nav-btn" data-go="crear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>Crear</button>
-    <button class="nav-btn" data-go="biblioteca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg>Biblioteca</button>
-    <button class="nav-btn" data-go="planes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>Planes</button>
-    <button class="nav-btn" data-go="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</button>
+    <button class="nav-btn" data-go="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span data-i18n="nav.home">Inicio</span></button>
+    <button class="nav-btn" data-go="crear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg><span data-i18n="nav.create">Crear</span></button>
+    <button class="nav-btn" data-go="biblioteca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg><span data-i18n="nav.lib">Biblioteca</span></button>
+    <button class="nav-btn" data-go="planes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg><span data-i18n="nav.plans">Planes</span></button>
+    <button class="nav-btn" data-go="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span data-i18n="nav.profile">Perfil</span></button>
     <div class="credits-box">
-      <div class="lbl">Canciones disponibles</div>
+      <div class="lbl" data-i18n="credits.avail">Canciones disponibles</div>
       <div class="num" id="credits">0</div>
-      <button class="btn btn-ghost" style="width:100%;margin-top:10px;padding:8px" data-go="planes">Ver planes</button>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px;padding:8px" data-go="planes" data-i18n="plans.view">Ver planes</button>
     </div>
+    <button class="langbtn" data-lang-toggle aria-label="Language" style="margin-top:10px"></button>
   </aside>
 
   <main>
@@ -228,12 +232,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     <section id="v-inicio" data-view="inicio">
       <div class="hero">
         <div>
-          <span class="tag"><span class="onair"></span>ESTUDIO ABIERTO 24/7</span>
-          <h1>Tus letras.<br><span style="color:var(--amber)">Canciones completas.</span></h1>
-          <p>Brielle es tu estudio de grabación con inteligencia artificial. Escribe la letra, elige el género y la voz, y recibe una canción completa, de principio a fin, lista para escuchar y compartir.</p>
+          <span class="tag"><span class="onair"></span><span data-i18n="hero.tag">ESTUDIO ABIERTO 24/7</span></span>
+          <h1 data-i18n-html="hero.h1">Tus letras.<br><span style="color:var(--amber)">Canciones completas.</span></h1>
+          <p data-i18n="hero.p">Brielle es tu estudio de grabación con inteligencia artificial. Escribe la letra, elige el género y la voz, y recibe una canción completa, de principio a fin, lista para escuchar y compartir.</p>
           <div class="actions">
-            <button class="btn btn-primary" data-go="crear">Crear mi canción</button>
-            <button class="btn btn-ghost" data-go="planes">Ver planes</button>
+            <button class="btn btn-primary" data-go="crear" data-i18n="hero.cta">Crear mi canción</button>
+            <button class="btn btn-ghost" data-go="planes" data-i18n="plans.view">Ver planes</button>
           </div>
         </div>
         <div class="console">
@@ -245,62 +249,56 @@ input[type=range]{width:100%;accent-color:var(--amber)}
         </div>
       </div>
       <div class="features">
-        <div class="feat"><div class="ico">♪</div><h3>Canciones de duración completa</h3><p>Nada de clips cortos. Intro, versos, coro y final, como una canción de verdad.</p></div>
-        <div class="feat"><div class="ico">✎</div><h3>Tu letra, tu historia</h3><p>Escribe desde cero o pega tu letra. Brielle respeta cada palabra.</p></div>
-        <div class="feat"><div class="ico">◉</div><h3>Géneros latinos y más</h3><p>Balada, bachata, cumbia, ranchera, gospel, pop, rock y mucho más.</p></div>
-        <div class="feat"><div class="ico">⬇</div><h3>Descarga y comparte</h3><p>Guarda tus canciones en tu biblioteca y compártelas donde quieras.</p></div>
+        <div class="feat"><div class="ico">♪</div><h3 data-i18n="f1t">Canciones de duración completa</h3><p data-i18n="f1p">Nada de clips cortos. Intro, versos, coro y final, como una canción de verdad.</p></div>
+        <div class="feat"><div class="ico">✎</div><h3 data-i18n="f2t">Tu letra, tu historia</h3><p data-i18n="f2p">Escribe desde cero o pega tu letra. Brielle respeta cada palabra.</p></div>
+        <div class="feat"><div class="ico">◉</div><h3 data-i18n="f3t">Géneros latinos y más</h3><p data-i18n="f3p">Balada, bachata, cumbia, ranchera, gospel, pop, rock y mucho más.</p></div>
+        <div class="feat"><div class="ico">⬇</div><h3 data-i18n="f4t">Descarga y comparte</h3><p data-i18n="f4p">Guarda tus canciones en tu biblioteca y compártelas donde quieras.</p></div>
       </div>
     </section>
 
     <!-- CREAR -->
     <section id="v-crear" data-view="crear">
-      <h2>Cabina de grabación</h2>
-      <p class="sub">Escribe tu letra y configura el sonido. Brielle se encarga del resto.</p>
+      <h2 data-i18n="create.h2">Cabina de grabación</h2>
+      <p class="sub" data-i18n="create.sub">Escribe tu letra y configura el sonido. Brielle se encarga del resto.</p>
       <div class="create-grid">
         <div class="card">
           <div class="field">
-            <label for="title">Título de la canción</label>
-            <input class="input" id="title" placeholder="Ej: Un nuevo comienzo" maxlength="60">
+            <label for="title" data-i18n="title.lbl">Título de la canción</label>
+            <input class="input" id="title" placeholder="Ej: Un nuevo comienzo" maxlength="60" data-i18n-ph="title.ph">
           </div>
           <div class="field">
-            <div class="row-between"><label for="lyrics">Letra</label><span class="counter" id="count">0 / 3000</span></div>
-            <textarea id="lyrics" maxlength="3000" placeholder="[Verso 1]&#10;Escribe aquí tu primer verso...&#10;&#10;[Coro]&#10;Aquí va el coro..."></textarea>
-            <div class="tools">
-              <button data-tag="[Intro]">+ Intro</button>
-              <button data-tag="[Verso]">+ Verso</button>
-              <button data-tag="[Pre-coro]">+ Pre-coro</button>
-              <button data-tag="[Coro]">+ Coro</button>
-              <button data-tag="[Puente]">+ Puente</button>
-              <button data-tag="[Final]">+ Final</button>
-            </div>
+            <div class="row-between"><label for="lyrics" data-i18n="lyrics.lbl">Letra</label><span class="counter" id="count">0 / 3000</span></div>
+            <textarea id="lyrics" maxlength="3000" placeholder="[Verso 1]&#10;Escribe aquí tu primer verso...&#10;&#10;[Coro]&#10;Aquí va el coro..." data-i18n-ph="lyrics.ph"></textarea>
+            <div class="tools" id="tools"></div>
           </div>
         </div>
         <div>
           <div class="card" style="margin-bottom:20px">
             <div class="field">
-              <label>Género</label>
+              <label data-i18n="genre.lbl">Género</label>
               <div class="chips" id="genres"></div>
             </div>
             <div class="field">
-              <label>Voz</label>
+              <label data-i18n="voice.lbl">Voz</label>
               <div class="chips" id="voices"></div>
             </div>
             <div class="field">
-              <label for="mood">Ambiente</label>
-              <select id="mood">
-                <option>Romántico</option><option>Alegre</option><option>Melancólico</option>
-                <option>Inspirador</option><option>Espiritual</option><option>Enérgico</option><option>Nostálgico</option>
-              </select>
+              <label for="songLang" data-i18n="lang.song">Idioma de la canción</label>
+              <select id="songLang"><option value="es">Español</option><option value="en">English</option><option value="mix">Spanglish</option></select>
+            </div>
+            <div class="field">
+              <label for="mood" data-i18n="mood.lbl">Ambiente</label>
+              <select id="mood"></select>
             </div>
             <div class="field">
               <div class="row-between"><label for="tempo">Tempo</label><span class="counter" id="tempoVal">95 BPM</span></div>
               <input type="range" id="tempo" min="60" max="160" value="95">
             </div>
             <div class="field" style="margin-bottom:0">
-              <p class="hint" style="margin-top:0">Brielle graba canciones completas, con intro, versos, coro y final. Usa las etiquetas [Verso], [Coro], etc. en tu letra para guiar la estructura.</p>
+              <p class="hint" style="margin-top:0" data-i18n="create.hint">Brielle graba canciones completas, con intro, versos, coro y final. Usa las etiquetas [Verso], [Coro], etc. en tu letra para guiar la estructura.</p>
             </div>
           </div>
-          <button class="btn btn-primary" id="recordBtn" style="width:100%;padding:16px;font-size:16px">● Grabar canción <span style="opacity:.7;font-weight:500">(usa 1 canción)</span></button>
+          <button class="btn btn-primary" id="recordBtn" style="width:100%;padding:16px;font-size:16px"><span data-i18n="rec.btn">● Grabar canción</span> <span data-i18n="rec.uses" style="opacity:.7;font-weight:500">(usa 1 canción)</span></button>
         </div>
       </div>
     </section>
@@ -308,50 +306,31 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     <!-- BIBLIOTECA -->
     <section id="v-biblioteca" data-view="biblioteca">
       <div class="lib-head">
-        <div><h2>Mi biblioteca</h2><p class="sub" style="margin:0" id="libCount"></p></div>
-        <input class="input" id="search" placeholder="Buscar canción..." style="max-width:260px">
+        <div><h2 data-i18n="lib.h2">Mi biblioteca</h2><p class="sub" style="margin:0" id="libCount"></p></div>
+        <input class="input" id="search" placeholder="Buscar canción..." style="max-width:260px" data-i18n-ph="lib.search">
       </div>
       <div class="lib-grid" id="library"></div>
     </section>
 
     <!-- PLANES -->
     <section id="v-planes" data-view="planes">
-      <h2>Planes</h2>
-      <p class="sub">Elige cuánto quieres crear. Cancela cuando quieras. Cada canción que grabas, incluso si la repites, usa 1 canción de tu plan.</p>
-      <div class="plans">
-        <div class="plan">
-          <div class="name">Demo</div>
-          <div class="price">$0 <small>para probar</small></div>
-          <ul><li>2 canciones gratis para probar</li><li>Canciones completas</li><li>Licencia Royalty-Free (uso personal y redes sociales)</li><li>Biblioteca personal</li></ul>
-          <button class="btn btn-ghost" data-plan="Demo">Plan actual</button>
-        </div>
-        <div class="plan hot">
-          <div class="name">Estudio</div>
-          <div class="price">$9.99 <small>/ mes</small></div>
-          <ul><li>20 canciones al mes</li><li>Licencia Royalty-Free (uso personal y redes sociales)</li><li>Todos los géneros y voces</li><li>Descargas en alta calidad</li></ul>
-          <button class="btn btn-primary" data-plan="Estudio">Elegir Estudio</button>
-        </div>
-        <div class="plan">
-          <div class="name">Productor</div>
-          <div class="price">$24.99 <small>/ mes</small></div>
-          <ul><li><span><b style="color:var(--text)">60 canciones al mes</b> (el triple que Estudio)</span></li><li>Licencia de distribución: publica en Spotify, Apple Music y más</li><li>Todos los géneros y voces</li><li>Soporte prioritario</li></ul>
-          <button class="btn btn-ghost" data-plan="Productor">Elegir Productor</button>
-        </div>
-      </div>
+      <h2 data-i18n="plans.h2">Planes</h2>
+      <p class="sub" data-i18n="plans.sub">Elige cuánto quieres crear. Cancela cuando quieras. Cada canción que grabas, incluso si la repites, usa 1 canción de tu plan.</p>
+      <div class="plans" id="plansGrid"></div>
     </section>
 
     <!-- PERFIL -->
     <section id="v-perfil" data-view="perfil">
-      <h2>Mi perfil</h2>
-      <p class="sub">Tu información y tu actividad en el estudio.</p>
+      <h2 data-i18n="prof.h2">Mi perfil</h2>
+      <p class="sub" data-i18n="prof.sub">Tu información y tu actividad en el estudio.</p>
       <div class="profile-grid">
         <div class="card">
-          <div class="field"><label for="uname">Nombre artístico</label><input class="input" id="uname" placeholder="Tu nombre"></div>
-          <div class="field" style="margin-bottom:0"><label for="uemail">Correo electrónico</label><input class="input" id="uemail" type="email" disabled></div>
-          <button class="btn btn-primary" id="saveProfile" style="margin-top:18px">Guardar</button>
+          <div class="field"><label for="uname" data-i18n="prof.name">Nombre artístico</label><input class="input" id="uname" placeholder="Tu nombre" data-i18n-ph="prof.name.ph"></div>
+          <div class="field" style="margin-bottom:0"><label for="uemail" data-i18n="prof.email">Correo electrónico</label><input class="input" id="uemail" type="email" disabled></div>
+          <button class="btn btn-primary" id="saveProfile" style="margin-top:18px" data-i18n="prof.save">Guardar</button>
         </div>
-        <div class="card"><label class="counter">CANCIONES CREADAS</label><div class="stat" id="statSongs">0</div><label class="counter">CANCIONES DISPONIBLES</label><div class="stat" id="statCredits">0</div></div>
-        <div class="card"><label class="counter">PLAN ACTUAL</label><div class="stat" id="statPlan">Demo</div><p class="hint" style="margin-bottom:14px">Los pagos de los planes se activan pronto.</p><button class="btn btn-ghost" id="logoutBtn">Cerrar sesión</button></div>
+        <div class="card"><label class="counter" data-i18n="prof.songs">CANCIONES CREADAS</label><div class="stat" id="statSongs">0</div><label class="counter" data-i18n="prof.avail">CANCIONES DISPONIBLES</label><div class="stat" id="statCredits">0</div></div>
+        <div class="card"><label class="counter" data-i18n="prof.plan">PLAN ACTUAL</label><div class="stat" id="statPlan">Demo</div><p class="hint" style="margin-bottom:14px" data-i18n="prof.hint">Los pagos de los planes se activan pronto.</p><button class="btn btn-ghost" id="logoutBtn" data-i18n="prof.logout">Cerrar sesión</button></div>
       </div>
     </section>
   </main>
@@ -378,29 +357,30 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 <div class="modal" id="modal">
   <div class="studio">
     <div class="onair-sign">ON AIR</div>
-    <h2 id="mTitle">Grabando…</h2>
-    <p class="sub" style="margin:0">Tu canción está en la cabina.</p>
+    <h2 id="mTitle" data-i18n="modal.rec">Grabando…</h2>
+    <p class="sub" style="margin:0" data-i18n="modal.sub">Tu canción está en la cabina.</p>
     <div class="steps" id="steps"></div>
     <div class="progress"><div id="mProg"></div></div>
-    <p class="hint" id="mNote" style="margin-top:12px">Una canción completa tarda normalmente de 1 a 4 minutos.</p>
-    <button class="btn btn-ghost" id="mBg" style="margin-top:14px">Seguir en segundo plano</button>
+    <p class="hint" id="mNote" style="margin-top:12px" data-i18n="modal.note">Una canción completa tarda normalmente de 1 a 4 minutos.</p>
+    <button class="btn btn-ghost" id="mBg" style="margin-top:14px" data-i18n="modal.bg">Seguir en segundo plano</button>
   </div>
 </div>
 
 <!-- AUTH -->
 <div class="modal" id="auth">
   <div class="studio">
+    <div style="text-align:right;margin:-8px -8px 0 0"><button class="langbtn" data-lang-toggle aria-label="Language"></button></div>
     <div class="onair-sign" style="font-size:13px">BRIELLE STUDIO</div>
     <h2 id="authTitle">Entra al estudio</h2>
     <p class="sub" style="margin:0" id="authSub">Inicia sesión para crear y guardar tus canciones.</p>
-    <div class="auth-tabs" id="authTabs"><button data-m="login" class="on">Entrar</button><button data-m="signup">Crear cuenta</button></div>
+    <div class="auth-tabs" id="authTabs"><button data-m="login" class="on" data-i18n="auth.enter">Entrar</button><button data-m="signup" data-i18n="auth.signup">Crear cuenta</button></div>
     <form id="authForm" novalidate>
-      <div class="field" id="fEmail"><label for="aEmail">Correo electrónico</label><input class="input" id="aEmail" type="email" autocomplete="email" placeholder="tu@correo.com"></div>
-      <div class="field" id="fPass"><label for="aPass" id="aPassLbl">Contraseña</label><input class="input" id="aPass" type="password" autocomplete="current-password" placeholder="Mínimo 8 caracteres"></div>
+      <div class="field" id="fEmail"><label for="aEmail" data-i18n="auth.email">Correo electrónico</label><input class="input" id="aEmail" type="email" autocomplete="email" placeholder="tu@correo.com"></div>
+      <div class="field" id="fPass"><label for="aPass" id="aPassLbl">Contraseña</label><input class="input" id="aPass" type="password" autocomplete="current-password" placeholder="Mínimo 8 caracteres" data-i18n-ph="auth.pass.ph"></div>
       <div id="authMsg" role="alert"></div>
       <button class="btn btn-primary" id="authGo" type="submit" style="width:100%">Entrar</button>
     </form>
-    <button class="linkbtn" id="forgotBtn" type="button">Olvidé mi contraseña</button>
+    <button class="linkbtn" id="forgotBtn" type="button" data-i18n="auth.forgot">Olvidé mi contraseña</button>
   </div>
 </div>
 
@@ -415,22 +395,155 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     del(k){ try{ localStorage.removeItem('brielle_'+k); }catch(e){} }
   };
 
-  const GENRES = ['Balada','Pop','Bachata','Cumbia','Ranchera','Reggaetón','Salsa','Rock','Gospel','R&B','Bolero','Acústico'];
+  const GENRES = ['Balada','Pop','Bachata','Cumbia','Ranchera','Reggaetón','Salsa','Rock','Gospel','R&B','Bolero','Acústico','Country','Hip-Hop','EDM','Jazz'];
   const VOICES = ['Masculina','Femenina','Dúo','Coro','Instrumental'];
 
   // Cómo se describe cada opción a Soundverse (el modelo entiende mejor las etiquetas de estilo en inglés).
-  const GENRE_PROMPT = {'Balada':'Latin romantic ballad','Pop':'Latin pop','Bachata':'bachata','Cumbia':'cumbia','Ranchera':'ranchera, mariachi','Reggaetón':'reggaeton','Salsa':'salsa','Rock':'rock en español','Gospel':'Spanish Christian worship, gospel','R&B':'Latin R&B','Bolero':'bolero','Acústico':'acoustic guitar ballad'};
+  const GENRE_PROMPT = {'Balada':'Latin romantic ballad','Pop':'Latin pop','Bachata':'bachata','Cumbia':'cumbia','Ranchera':'ranchera, mariachi','Reggaetón':'reggaeton','Salsa':'salsa','Rock':'rock en español','Gospel':'Spanish Christian worship, gospel','R&B':'Latin R&B','Bolero':'bolero','Acústico':'acoustic guitar ballad','Country':'country','Hip-Hop':'hip hop, rap','EDM':'electronic dance music, EDM','Jazz':'jazz'};
   const MOOD_PROMPT = {'Romántico':'romantic','Alegre':'happy, upbeat','Melancólico':'melancholic','Inspirador':'inspiring','Espiritual':'spiritual','Enérgico':'energetic','Nostálgico':'nostalgic'};
   const VOICE_PROMPT = {'Masculina':'male vocals','Femenina':'female vocals','Dúo':'male and female duet vocals','Coro':'choir vocals','Instrumental':'instrumental, no vocals'};
   const VOICE_GENDER = {'Masculina':'male','Femenina':'female'};
+
+  /* ---------- idioma / language ---------- */
+  const I18N = {
+    es: {
+      'meta.title':'Brielle — Tu estudio de canciones con IA',
+      'nav.home':'Inicio','nav.create':'Crear','nav.lib':'Biblioteca','nav.plans':'Planes','nav.profile':'Perfil',
+      'songs.label':'Canciones:','credits.avail':'Canciones disponibles','plans.view':'Ver planes',
+      'hero.tag':'ESTUDIO ABIERTO 24/7',
+      'hero.h1':'Tus letras.<br><span style="color:var(--amber)">Canciones completas.</span>',
+      'hero.p':'Brielle es tu estudio de grabación con inteligencia artificial. Escribe la letra, elige el género y la voz, y recibe una canción completa, de principio a fin, lista para escuchar y compartir.',
+      'hero.cta':'Crear mi canción',
+      'f1t':'Canciones de duración completa','f1p':'Nada de clips cortos. Intro, versos, coro y final, como una canción de verdad.',
+      'f2t':'Tu letra, tu historia','f2p':'Escribe desde cero o pega tu letra. Brielle respeta cada palabra.',
+      'f3t':'Géneros latinos y más','f3p':'Balada, bachata, cumbia, ranchera, gospel, pop, rock y mucho más.',
+      'f4t':'Descarga y comparte','f4p':'Guarda tus canciones en tu biblioteca y compártelas donde quieras.',
+      'create.h2':'Cabina de grabación','create.sub':'Escribe tu letra y configura el sonido. Brielle se encarga del resto.',
+      'title.lbl':'Título de la canción','title.ph':'Ej: Un nuevo comienzo','lyrics.lbl':'Letra',
+      'lyrics.ph':'[Verso 1]\nEscribe aquí tu primer verso...\n\n[Coro]\nAquí va el coro...',
+      'tool.intro':'+ Intro','tool.verse':'+ Verso','tool.pre':'+ Pre-coro','tool.chorus':'+ Coro','tool.bridge':'+ Puente','tool.outro':'+ Final',
+      'tag.intro':'[Intro]','tag.verse':'[Verso]','tag.pre':'[Pre-coro]','tag.chorus':'[Coro]','tag.bridge':'[Puente]','tag.outro':'[Final]',
+      'genre.lbl':'Género','voice.lbl':'Voz','mood.lbl':'Ambiente','lang.song':'Idioma de la canción',
+      'create.hint':'Brielle graba canciones completas, con intro, versos, coro y final. Usa las etiquetas [Verso], [Coro], etc. en tu letra para guiar la estructura.',
+      'rec.btn':'● Grabar canción','rec.uses':'(usa 1 canción)',
+      'lib.h2':'Mi biblioteca','lib.search':'Buscar canción...',
+      'lib.count1':'1 canción','lib.countN':'{n} canciones','lib.none':'No se encontraron canciones.',
+      'lib.empty':'Tu biblioteca está vacía.','lib.first':'Crear mi primera canción',
+      'lib.fail':'Falló','lib.rec':'Grabando…','lib.play':'Reproducir','lib.check':'Revisar si ya está lista','lib.dl':'Descargar','lib.del':'Eliminar',
+      'plans.h2':'Planes','plans.sub':'Elige cuánto quieres crear. Cancela cuando quieras. Cada canción que grabas, incluso si la repites, usa 1 canción de tu plan.',
+      'plan.demo':'Demo','plan.estudio':'Estudio','plan.productor':'Productor',
+      'plan.demo.p':'para probar','plan.month':'/ mes',
+      'plan.demo.l':['2 canciones gratis para probar','Canciones completas','Licencia Royalty-Free (uso personal y redes sociales)','Biblioteca personal'],
+      'plan.estudio.l':['20 canciones al mes','Licencia Royalty-Free (uso personal y redes sociales)','Todos los géneros y voces','Descargas en alta calidad'],
+      'plan.productor.l':['<b style="color:var(--text)">60 canciones al mes</b> (el triple que Estudio)','Licencia de distribución: publica en Spotify, Apple Music y más','Todos los géneros y voces','Soporte prioritario'],
+      'plan.current':'Plan actual','plan.popular':'MÁS POPULAR','plan.pick':'Elegir {p}','plan.already':'Ya estás en el plan Demo','plan.soon':'Los pagos para el plan {p} se activan pronto.',
+      'prof.h2':'Mi perfil','prof.sub':'Tu información y tu actividad en el estudio.','prof.name':'Nombre artístico','prof.name.ph':'Tu nombre',
+      'prof.email':'Correo electrónico','prof.save':'Guardar','prof.songs':'CANCIONES CREADAS','prof.avail':'CANCIONES DISPONIBLES','prof.plan':'PLAN ACTUAL',
+      'prof.hint':'Los pagos de los planes se activan pronto.','prof.logout':'Cerrar sesión','prof.saved':'Perfil guardado','prof.saveerr':'No se pudo guardar. Intenta de nuevo.',
+      'player.none':'Nada sonando','player.pick':'Elige una canción',
+      'modal.sub':'Tu canción está en la cabina.','modal.rec':'Grabando…','modal.note':'Una canción completa tarda normalmente de 1 a 4 minutos.','modal.bg':'Seguir en segundo plano',
+      'step.1':'Enviando al estudio','step.2':'En cola','step.3':'Grabando voces e instrumentos','step.4':'Mezcla y masterización',
+      'auth.enter':'Entrar','auth.signup':'Crear cuenta','auth.email':'Correo electrónico','auth.pass':'Contraseña','auth.newpass':'Nueva contraseña','auth.pass.ph':'Mínimo 8 caracteres',
+      'auth.forgot':'Olvidé mi contraseña','auth.t.login':'Entra al estudio','auth.t.signup':'Crea tu cuenta','auth.t.rec':'Nueva contraseña',
+      'auth.s.login':'Inicia sesión para crear y guardar tus canciones.','auth.s.signup':'Empiezas con 2 canciones de regalo.','auth.s.rec':'Escribe tu nueva contraseña.',
+      'auth.savepass':'Guardar contraseña','auth.e.login':'Correo o contraseña incorrectos.','auth.e.confirm':'Primero confirma tu correo (te enviamos un enlace).',
+      'auth.e.exists':'Ese correo ya tiene cuenta. Usa "Entrar".','auth.e.weak':'La contraseña es muy corta o débil (mínimo 8 caracteres).',
+      'auth.e.rate':'Demasiados intentos. Espera unos minutos.','auth.e.mail':'Escribe un correo válido.','auth.e.generic':'No se pudo completar. Intenta de nuevo.',
+      'auth.e.min':'La contraseña debe tener mínimo 8 caracteres.','auth.e.nopass':'Escribe tu contraseña.',
+      'auth.forgot.need':'Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña".','auth.forgot.sent':'Te enviamos un correo para cambiar tu contraseña.',
+      'auth.signup.ok':'¡Listo! Te enviamos un correo para confirmar tu cuenta. Ábrelo y luego entra.','auth.passok':'Contraseña actualizada',
+      'err.lib':'No se pudo cargar tu biblioteca.','err.login':'Inicia sesión para continuar.','err.offline':'Sin conexión con el estudio. Revisa tu internet.',
+      'err.expired':'Tu sesión venció. Entra de nuevo.','err.generic':'Algo salió mal. Intenta de nuevo.',
+      'err.nocredits':'No te quedan canciones disponibles. Elige un plan para seguir creando.',
+      'err.funds':'El estudio se quedó sin saldo en Soundverse. Hay que recargar la billetera.','err.rate':'Demasiadas grabaciones seguidas. Espera un momento e intenta de nuevo.',
+      'err.input':'Soundverse no aceptó los datos: ','err.input2':'revisa la letra.',
+      'toast.bg':'Tu canción se sigue grabando. La verás en tu biblioteca.','toast.busy':'Ya hay una canción grabándose. Espera a que termine.',
+      'toast.title':'Escribe un título para tu canción','toast.lyrics':'Escribe tu letra (mínimo 20 caracteres)',
+      'toast.slow':'La canción tarda más de lo normal. Revisa tu biblioteca en unos minutos.','toast.ready':'¡"{t}" está lista!',
+      'toast.failed':'No se pudo grabar "{t}". Te devolvimos la canción.','toast.checking':'Revisando…','toast.still':'Todavía se está grabando. Intenta en un minuto.',
+      'toast.noaudio':'El audio todavía no está disponible.','toast.audioerr':'No se pudo obtener el audio. Intenta de nuevo.','toast.dl':'Preparando descarga…',
+      'toast.waitdel':'Espera a que termine de grabarse antes de eliminarla.','confirm.del':'¿Eliminar "{t}" de tu biblioteca?','toast.delerr':'No se pudo eliminar. Intenta de nuevo.',
+      'toast.notready':'Esa canción todavía no está lista','player.loading':'Cargando…','toast.tapplay':'Toca ▶ para reproducir','toast.createfirst':'Crea una canción primero',
+      'toast.playerr':'No se pudo reproducir. Intenta de nuevo.','toast.expired':'El enlace de audio venció. Toca ▶ otra vez.'
+    },
+    en: {
+      'meta.title':'Brielle — Your AI song studio',
+      'nav.home':'Home','nav.create':'Create','nav.lib':'Library','nav.plans':'Plans','nav.profile':'Profile',
+      'songs.label':'Songs:','credits.avail':'Songs available','plans.view':'See plans',
+      'hero.tag':'STUDIO OPEN 24/7',
+      'hero.h1':'Your lyrics.<br><span style="color:var(--amber)">Full songs.</span>',
+      'hero.p':'Brielle is your AI recording studio. Write the lyrics, pick the genre and the voice, and get a complete song, start to finish, ready to listen to and share.',
+      'hero.cta':'Create my song',
+      'f1t':'Full-length songs','f1p':'No short clips. Intro, verses, chorus and outro, like a real song.',
+      'f2t':'Your lyrics, your story','f2p':'Write from scratch or paste your lyrics. Brielle respects every word.',
+      'f3t':'Latin genres and more','f3p':'Ballad, bachata, cumbia, ranchera, gospel, pop, rock, country, hip-hop and much more.',
+      'f4t':'Download and share','f4p':'Keep your songs in your library and share them anywhere.',
+      'create.h2':'Recording booth','create.sub':'Write your lyrics and set the sound. Brielle takes care of the rest.',
+      'title.lbl':'Song title','title.ph':'E.g. A new beginning','lyrics.lbl':'Lyrics',
+      'lyrics.ph':'[Verse 1]\nWrite your first verse here...\n\n[Chorus]\nThe chorus goes here...',
+      'tool.intro':'+ Intro','tool.verse':'+ Verse','tool.pre':'+ Pre-chorus','tool.chorus':'+ Chorus','tool.bridge':'+ Bridge','tool.outro':'+ Outro',
+      'tag.intro':'[Intro]','tag.verse':'[Verse]','tag.pre':'[Pre-Chorus]','tag.chorus':'[Chorus]','tag.bridge':'[Bridge]','tag.outro':'[Outro]',
+      'genre.lbl':'Genre','voice.lbl':'Voice','mood.lbl':'Mood','lang.song':'Song language',
+      'create.hint':'Brielle records full songs, with intro, verses, chorus and outro. Use tags like [Verse], [Chorus], etc. in your lyrics to guide the structure.',
+      'rec.btn':'● Record song','rec.uses':'(uses 1 song)',
+      'lib.h2':'My library','lib.search':'Search songs...',
+      'lib.count1':'1 song','lib.countN':'{n} songs','lib.none':'No songs found.',
+      'lib.empty':'Your library is empty.','lib.first':'Create my first song',
+      'lib.fail':'Failed','lib.rec':'Recording…','lib.play':'Play','lib.check':'Check if it is ready','lib.dl':'Download','lib.del':'Delete',
+      'plans.h2':'Plans','plans.sub':'Choose how much you want to create. Cancel anytime. Every song you record, even if you redo it, uses 1 song from your plan.',
+      'plan.demo':'Demo','plan.estudio':'Studio','plan.productor':'Producer',
+      'plan.demo.p':'to try it out','plan.month':'/ month',
+      'plan.demo.l':['2 free songs to try','Full-length songs','Royalty-Free license (personal and social media use)','Personal library'],
+      'plan.estudio.l':['20 songs per month','Royalty-Free license (personal and social media use)','All genres and voices','High-quality downloads'],
+      'plan.productor.l':['<b style="color:var(--text)">60 songs per month</b> (triple the Studio plan)','Distribution license: publish on Spotify, Apple Music and more','All genres and voices','Priority support'],
+      'plan.current':'Current plan','plan.popular':'MOST POPULAR','plan.pick':'Choose {p}','plan.already':'You are already on the Demo plan','plan.soon':'Payments for the {p} plan are coming soon.',
+      'prof.h2':'My profile','prof.sub':'Your information and your activity in the studio.','prof.name':'Artist name','prof.name.ph':'Your name',
+      'prof.email':'Email','prof.save':'Save','prof.songs':'SONGS CREATED','prof.avail':'SONGS AVAILABLE','prof.plan':'CURRENT PLAN',
+      'prof.hint':'Plan payments are coming soon.','prof.logout':'Log out','prof.saved':'Profile saved','prof.saveerr':'Could not save. Please try again.',
+      'player.none':'Nothing playing','player.pick':'Pick a song',
+      'modal.sub':'Your song is in the booth.','modal.rec':'Recording…','modal.note':'A full song usually takes 1 to 4 minutes.','modal.bg':'Keep going in the background',
+      'step.1':'Sending to the studio','step.2':'In the queue','step.3':'Recording vocals and instruments','step.4':'Mixing and mastering',
+      'auth.enter':'Log in','auth.signup':'Sign up','auth.email':'Email','auth.pass':'Password','auth.newpass':'New password','auth.pass.ph':'At least 8 characters',
+      'auth.forgot':'Forgot my password','auth.t.login':'Enter the studio','auth.t.signup':'Create your account','auth.t.rec':'New password',
+      'auth.s.login':'Log in to create and save your songs.','auth.s.signup':'You start with 2 free songs.','auth.s.rec':'Type your new password.',
+      'auth.savepass':'Save password','auth.e.login':'Wrong email or password.','auth.e.confirm':'Please confirm your email first (we sent you a link).',
+      'auth.e.exists':'That email already has an account. Use "Log in".','auth.e.weak':'The password is too short or weak (at least 8 characters).',
+      'auth.e.rate':'Too many attempts. Please wait a few minutes.','auth.e.mail':'Enter a valid email.','auth.e.generic':'Something went wrong. Please try again.',
+      'auth.e.min':'The password must have at least 8 characters.','auth.e.nopass':'Enter your password.',
+      'auth.forgot.need':'Enter your email above and tap "Forgot my password" again.','auth.forgot.sent':'We sent you an email to change your password.',
+      'auth.signup.ok':'Done! We sent you an email to confirm your account. Open it, then log in.','auth.passok':'Password updated',
+      'err.lib':'Could not load your library.','err.login':'Log in to continue.','err.offline':'No connection to the studio. Check your internet.',
+      'err.expired':'Your session expired. Log in again.','err.generic':'Something went wrong. Please try again.',
+      'err.nocredits':'You have no songs left. Choose a plan to keep creating.',
+      'err.funds':'The studio ran out of balance at Soundverse. The wallet needs a top-up.','err.rate':'Too many recordings in a row. Wait a moment and try again.',
+      'err.input':'Soundverse did not accept the data: ','err.input2':'check your lyrics.',
+      'toast.bg':'Your song is still recording. You will find it in your library.','toast.busy':'A song is already recording. Wait for it to finish.',
+      'toast.title':'Write a title for your song','toast.lyrics':'Write your lyrics (at least 20 characters)',
+      'toast.slow':'The song is taking longer than usual. Check your library in a few minutes.','toast.ready':'"{t}" is ready!',
+      'toast.failed':'Could not record "{t}". We gave your song back.','toast.checking':'Checking…','toast.still':'Still recording. Try again in a minute.',
+      'toast.noaudio':'The audio is not available yet.','toast.audioerr':'Could not get the audio. Please try again.','toast.dl':'Preparing download…',
+      'toast.waitdel':'Wait for it to finish recording before deleting it.','confirm.del':'Delete "{t}" from your library?','toast.delerr':'Could not delete. Please try again.',
+      'toast.notready':'That song is not ready yet','player.loading':'Loading…','toast.tapplay':'Tap ▶ to play','toast.createfirst':'Create a song first',
+      'toast.playerr':'Could not play. Please try again.','toast.expired':'The audio link expired. Tap ▶ again.'
+    }
+  };
+  const GENRE_LABEL = {en:{'Balada':'Ballad','Reggaetón':'Reggaeton','Acústico':'Acoustic'}, es:{}};
+  const VOICE_LABEL = {en:{'Masculina':'Male','Femenina':'Female','Dúo':'Duet','Coro':'Choir','Instrumental':'Instrumental'}, es:{}};
+  const MOOD_LABEL  = {en:{'Romántico':'Romantic','Alegre':'Happy','Melancólico':'Melancholic','Inspirador':'Inspiring','Espiritual':'Spiritual','Enérgico':'Energetic','Nostálgico':'Nostalgic'}, es:{}};
+  const MOODS = ['Romántico','Alegre','Melancólico','Inspirador','Espiritual','Enérgico','Nostálgico'];
+  const TOOLS = ['intro','verse','pre','chorus','bridge','outro'];
+  let lang = store.get('lang', null) || ((navigator.language||'en').toLowerCase().startsWith('es') ? 'es' : 'en');
+  const t = (k, v) => { let s = (I18N[lang][k] != null ? I18N[lang][k] : I18N.es[k]); if(s==null) return k; if(typeof s==='string' && v) for(const x in v) s = s.split('{'+x+'}').join(v[x]); return s; };
+  const gl = g => (GENRE_LABEL[lang][g]) || g;
+  const vl = v => (VOICE_LABEL[lang][v]) || v;
+  const ml = m => (MOOD_LABEL[lang][m]) || m;
 
   // Estos dos valores son públicos por diseño (la seguridad la dan las reglas RLS de la base de datos).
   const SUPA_URL = 'https://poxudjzlzagkorjfwxum.supabase.co';
   const SUPA_KEY = 'sb_publishable_66tPqOSkemwBztB1cyxPIA_ZoqWDLYH';
   const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-  const PLAN_NAME = {demo:'Demo', estudio:'Estudio', productor:'Productor'};
-
-  let songs = [], credits = 0, plan = 'Demo', profile = {name:'',email:''}, me = null;
+  
+  let songs = [], credits = 0, plan = 'demo', profile = {name:'',email:''}, me = null;
   const sel = {genre:'Balada', voice:'Masculina'};
 
   /* ---------- helpers ---------- */
@@ -447,12 +560,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     status: r.status==='completed' ? 'ready' : r.status==='failed' ? 'failed' : 'pending'});
   async function loadSongs(){
     const {data,error} = await sb.from('songs').select('*').order('created_at',{ascending:false});
-    if(error){ toast('No se pudo cargar tu biblioteca.'); return; }
+    if(error){ toast(t('err.lib')); return; }
     songs = data.map(norm);
   }
   async function loadProfile(){
     const {data} = await sb.from('profiles').select('*').eq('id',me.id).maybeSingle();
-    if(data){ credits=data.credits; plan=PLAN_NAME[data.plan]||'Demo'; profile={name:data.display_name||'',email:data.email||me.email||''}; }
+    if(data){ credits=data.credits; plan=data.plan||'demo'; profile={name:data.display_name||'',email:data.email||me.email||''}; }
     else profile={name:'',email:me.email||''};
     renderCredits();
   }
@@ -460,21 +573,21 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   /* ---------- servidor (funciones de Netlify) ---------- */
   function friendly(d){
     const e = d && d.error;
-    if(e==='NoCredits') return 'No te quedan canciones disponibles. Elige un plan para seguir creando.';
-    if(e==='InsufficientFunds') return 'El estudio se quedó sin saldo en Soundverse. Hay que recargar la billetera.';
-    if(e==='RateLimited') return 'Demasiadas grabaciones seguidas. Espera un momento e intenta de nuevo.';
-    if(e==='InvalidGenerationInput') return 'Soundverse no aceptó los datos: ' + (d.message||'revisa la letra.');
-    return (d && (d.message || d.error)) || 'Algo salió mal. Intenta de nuevo.';
+    if(e==='NoCredits') return t('err.nocredits');
+    if(e==='InsufficientFunds') return t('err.funds');
+    if(e==='RateLimited') return t('err.rate');
+    if(e==='InvalidGenerationInput') return t('err.input') + ((d.message)||t('err.input2'));
+    return t('err.generic');
   }
   async function api(path, opts={}){
     const {data:{session}} = await sb.auth.getSession();
-    if(!session){ showAuth('login'); const e=new Error('Inicia sesión para continuar.'); e.auth=true; throw e; }
+    if(!session){ showAuth('login'); const e=new Error(t('err.login')); e.auth=true; throw e; }
     let res;
     try{
       res = await fetch('/.netlify/functions/'+path, {...opts, headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token}});
-    }catch(e){ throw new Error('Sin conexión con el estudio. Revisa tu internet.'); }
+    }catch(e){ throw new Error(t('err.offline')); }
     const data = await res.json().catch(()=>({}));
-    if(res.status===401){ showAuth('login'); const e=new Error('Tu sesión venció. Entra de nuevo.'); e.auth=true; throw e; }
+    if(res.status===401){ showAuth('login'); const e=new Error(t('err.expired')); e.auth=true; throw e; }
     if(!res.ok){ const e=new Error(friendly(data)); e.code=data.error; throw e; }
     return data;
   }
@@ -495,22 +608,20 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   function renderCredits(){ $('#credits').textContent=credits; $('#creditsMobile').textContent=credits; }
 
   /* ---------- chips ---------- */
-  function chips(el, items, key){
+  function chips(el, items, key, lab){
     el.innerHTML='';
     items.forEach(it=>{
-      const b=document.createElement('button'); b.className='chip'; b.textContent=it;
+      const b=document.createElement('button'); b.className='chip'; b.textContent=lab?lab(it):it;
       if(sel[key]===it) b.classList.add('on');
       b.onclick=()=>{ sel[key]=it; [...el.children].forEach(c=>c.classList.remove('on')); b.classList.add('on'); };
       el.appendChild(b);
     });
   }
-  chips($('#genres'), GENRES, 'genre');
-  chips($('#voices'), VOICES, 'voice');
 
   /* ---------- editor de letra ---------- */
   const ly=$('#lyrics');
   ly.addEventListener('input',()=>$('#count').textContent=`${ly.value.length} / 3000`);
-  $$('.tools button').forEach(b=>b.onclick=()=>{
+  $('#tools').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
     const pos=ly.selectionStart, pre=ly.value.slice(0,pos), post=ly.value.slice(pos);
     const ins=(pre && !pre.endsWith('\n\n') ? (pre.endsWith('\n')?'\n':'\n\n') : '') + b.dataset.tag + '\n';
     ly.value=pre+ins+post; ly.focus(); ly.selectionStart=ly.selectionEnd=pos+ins.length;
@@ -520,17 +631,17 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 
   function buildPrompt(s){
     const parts=[GENRE_PROMPT[s.genre]||s.genre, (MOOD_PROMPT[s.mood]||s.mood)+' mood', s.tempo+' BPM', VOICE_PROMPT[s.voice]||''];
-    if(s.voice!=='Instrumental') parts.push('sung in Spanish');
+    if(s.voice!=='Instrumental') parts.push(s.songLang==='en' ? 'sung in English' : s.songLang==='mix' ? 'sung in Spanglish, mixing Spanish and English' : 'sung in Spanish');
     parts.push('full-length song with intro, verses, chorus and outro');
     return parts.filter(Boolean).join(', ');
   }
 
   /* ---------- grabación real ---------- */
-  const STEPS=['Enviando al estudio','En cola','Grabando voces e instrumentos','Mezcla y masterización'];
+  const stepsL=()=>[t('step.1'),t('step.2'),t('step.3'),t('step.4')];
   const modal={
     open(title){
       $('#mTitle').textContent=title;
-      $('#steps').innerHTML=STEPS.map(s=>`<div class="step"><span class="dot"></span>${s}</div>`).join('');
+      $('#steps').innerHTML=stepsL().map(s=>`<div class="step"><span class="dot"></span>${s}</div>`).join('');
       $('#mProg').style.width='0'; $('#modal').classList.add('show'); this.at(0);
     },
     at(i){
@@ -538,26 +649,26 @@ input[type=range]{width:100%;accent-color:var(--amber)}
         el.classList.toggle('done',k<i); el.classList.toggle('run',k===i);
         el.querySelector('.dot').textContent = k<i ? '✓' : '';
       });
-      $('#mProg').style.width=Math.min(95,(i/STEPS.length*100)+5)+'%';
+      $('#mProg').style.width=Math.min(95,(i/stepsL().length*100)+5)+'%';
     },
     close(){ $('#modal').classList.remove('show'); }
   };
-  $('#mBg').onclick=()=>{ modal.close(); toast('Tu canción se sigue grabando. La verás en tu biblioteca.'); go('biblioteca'); };
+  $('#mBg').onclick=()=>{ modal.close(); toast(t('toast.bg')); go('biblioteca'); };
 
   let recording=false;
   $('#recordBtn').onclick=()=>{
-    if(recording){ toast('Ya hay una canción grabándose. Espera a que termine.'); return; }
+    if(recording){ toast(t('toast.busy')); return; }
     const title=$('#title').value.trim(), lyrics=ly.value.trim();
-    if(!title){ toast('Escribe un título para tu canción'); $('#title').focus(); return; }
-    if(sel.voice!=='Instrumental' && lyrics.length<20){ toast('Escribe tu letra (mínimo 20 caracteres)'); ly.focus(); return; }
-    if(credits<1){ toast('No te quedan canciones disponibles. Elige un plan para seguir creando.'); go('planes'); return; }
+    if(!title){ toast(t('toast.title')); $('#title').focus(); return; }
+    if(sel.voice!=='Instrumental' && lyrics.length<20){ toast(t('toast.lyrics')); ly.focus(); return; }
+    if(credits<1){ toast(t('err.nocredits')); go('planes'); return; }
     record({title,lyrics});
   };
 
   async function record({title,lyrics}){
     recording=true; $('#recordBtn').disabled=true;
     const s={title, lyrics:sel.voice==='Instrumental'?'':lyrics, genre:sel.genre, voice:sel.voice,
-             mood:$('#mood').value, tempo:+$('#tempo').value};
+             mood:$('#mood').value, tempo:+$('#tempo').value, songLang:$('#songLang').value};
     modal.open(title);
     try{
       const r = await api('generate-song',{method:'POST', body:JSON.stringify({
@@ -592,34 +703,34 @@ input[type=range]{width:100%;accent-color:var(--amber)}
         if(r.status==='failed'){ await fail(s, r.error); if(withModal) modal.close(); return; }
         if(withModal) modal.at(Date.now()-start>60000 ? 3 : 2);
       }
-      if(withModal){ modal.close(); toast('La canción tarda más de lo normal. Revisa tu biblioteca en unos minutos.'); go('biblioteca'); }
+      if(withModal){ modal.close(); toast(t('toast.slow')); go('biblioteca'); }
     } finally { polling.delete(s.id); }
   }
   async function finish(s){
     await Promise.all([loadSongs(), loadProfile()]);
     const ns = songs.find(x=>x.id===s.id); if(!ns) return;
     renderLibrary();
-    toast(`¡"${ns.title}" está lista!`);
+    toast(t('toast.ready',{t:ns.title}));
     if(!playing){ go('biblioteca'); load(ns, true); }
   }
   async function fail(s, msg){
     await Promise.all([loadSongs(), loadProfile()]); renderLibrary();
-    toast('No se pudo grabar "'+s.title+'". Te devolvimos la canción. '+(msg?'('+msg+')':''));
+    toast(t('toast.failed',{t:s.title})+(msg?' ('+msg+')':''));
   }
   async function checkNow(s){
-    toast('Revisando…');
+    toast(t('toast.checking'));
     try{
       const r = await api('song-status?id='+encodeURIComponent(s.id));
       if(r.status==='completed') await finish(s);
       else if(r.status==='failed') await fail(s, r.error);
-      else toast('Todavía se está grabando. Intenta en un minuto.');
+      else toast(t('toast.still'));
     }catch(e){ toast(e.message); }
   }
   async function freshUrl(s, download){
-    if(!s.audio) throw new Error('El audio todavía no está disponible.');
+    if(!s.audio) throw new Error(t('toast.noaudio'));
     const ext = (s.audio.match(/\.(\w+)$/)||[])[1]||'mp3';
     const {data,error} = await sb.storage.from('songs').createSignedUrl(s.audio, 3600, download?{download:`${s.title}.${ext}`}:undefined);
-    if(error||!data) throw new Error('No se pudo obtener el audio. Intenta de nuevo.');
+    if(error||!data) throw new Error(t('toast.audioerr'));
     return data.signedUrl;
   }
 
@@ -628,15 +739,15 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   function renderLibrary(){
     const q=$('#search').value.toLowerCase();
     const list=songs.filter(s=>(s.title+s.genre+s.mood).toLowerCase().includes(q));
-    $('#libCount').textContent=`${songs.length} canción${songs.length===1?'':'es'}`;
+    $('#libCount').textContent=songs.length===1?t('lib.count1'):t('lib.countN',{n:songs.length});
     const lib=$('#library');
-    if(!list.length){ lib.innerHTML=`<div class="empty" style="grid-column:1/-1">${songs.length?'No se encontraron canciones.':'Tu biblioteca está vacía.<br><br><button class="btn btn-primary" data-go="crear">Crear mi primera canción</button>'}</div>`; return; }
+    if(!list.length){ lib.innerHTML=`<div class="empty" style="grid-column:1/-1">${songs.length?t('lib.none'):t('lib.empty')+'<br><br><button class="btn btn-primary" data-go="crear">'+t('lib.first')+'</button>'}</div>`; return; }
     lib.innerHTML=list.map(s=>{
       const isCur=current&&current.id===s.id&&playing;
       let btn, meta;
-      if(s.status==='ready'){ btn=`<button class="play" data-act="play" aria-label="Reproducir">${isCur?'❚❚':'▶'}</button>`; meta=`${esc(s.genre)} · ${fmt(s.dur)}`; }
-      else if(s.status==='failed'){ btn=''; meta=`<span class="badge fail">Falló</span>`; }
-      else { btn=`<button class="play" data-act="check" aria-label="Revisar" title="Revisar si ya está lista">⟳</button>`; meta=`<span class="badge">Grabando…</span>`; }
+      if(s.status==='ready'){ btn=`<button class="play" data-act="play" aria-label="${t('lib.play')}">${isCur?'❚❚':'▶'}</button>`; meta=`${esc(gl(s.genre))} · ${fmt(s.dur)}`; }
+      else if(s.status==='failed'){ btn=''; meta=`<span class="badge fail">${t('lib.fail')}</span>`; }
+      else { btn=`<button class="play" data-act="check" aria-label="${t('lib.check')}" title="${t('lib.check')}">⟳</button>`; meta=`<span class="badge">${t('lib.rec')}</span>`; }
       return `
       <div class="song ${isCur?'playing':''} ${s.status==='pending'?'pending':''}" data-id="${s.id}">
         <div class="cover" style="background:${coverBg(s)}">
@@ -644,7 +755,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
         </div>
         <div class="meta">
           <div class="t">${esc(s.title)}</div>
-          <div class="s"><span>${meta}</span><span class="acts">${s.status==='ready'?'<button class="dl" data-act="dl" aria-label="Descargar" title="Descargar">⬇</button>':''}<button class="del" data-act="del" aria-label="Eliminar" title="Eliminar">✕</button></span></div>
+          <div class="s"><span>${meta}</span><span class="acts">${s.status==='ready'?`<button class="dl" data-act="dl" aria-label="${t('lib.dl')}" title="${t('lib.dl')}">⬇</button>`:''}<button class="del" data-act="del" aria-label="${t('lib.del')}" title="${t('lib.del')}">✕</button></span></div>
         </div>
       </div>`;}).join('');
   }
@@ -654,12 +765,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     const act=b.dataset.act;
     if(act==='play'){ if(current&&current.id===s.id) toggle(); else load(s,true); }
     if(act==='check') checkNow(s);
-    if(act==='dl'){ try{ toast('Preparando descarga…'); window.open(await freshUrl(s,true),'_blank'); }catch(err){ toast(err.message); } }
-    if(act==='del' && s.status==='pending'){ toast('Espera a que termine de grabarse antes de eliminarla.'); return; }
-    if(act==='del' && confirm(`¿Eliminar "${s.title}" de tu biblioteca?`)){
+    if(act==='dl'){ try{ toast(t('toast.dl')); window.open(await freshUrl(s,true),'_blank'); }catch(err){ toast(err.message); } }
+    if(act==='del' && s.status==='pending'){ toast(t('toast.waitdel')); return; }
+    if(act==='del' && confirm(t('confirm.del',{t:s.title}))){
       if(s.audio) await sb.storage.from('songs').remove([s.audio]);
       const {error} = await sb.from('songs').delete().eq('id',s.id);
-      if(error){ toast('No se pudo eliminar. Intenta de nuevo.'); return; }
+      if(error){ toast(t('toast.delerr')); return; }
       songs=songs.filter(x=>x.id!==s.id);
       if(current&&current.id===s.id){ stop(); current=null; resetPlayer(); }
       renderLibrary();
@@ -670,22 +781,22 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const audio=new Audio(); audio.preload='auto';
   let current=null, playing=false, meterTimer=null;
   const meters=$('#meters'); for(let i=0;i<14;i++) meters.appendChild(document.createElement('i'));
-  function resetPlayer(){ audio.removeAttribute('src'); audio.load(); $('#pTitle').textContent='Nada sonando'; $('#pSub').textContent='Elige una canción'; $('#pCover').style.background='var(--panel-2)'; $('#tot').textContent='0:00'; $('#cur').textContent='0:00'; $('#fill').style.width='0'; }
+  function resetPlayer(){ audio.removeAttribute('src'); audio.load(); $('#pTitle').textContent=t('player.none'); $('#pSub').textContent=t('player.pick'); $('#pCover').style.background='var(--panel-2)'; $('#tot').textContent='0:00'; $('#cur').textContent='0:00'; $('#fill').style.width='0'; }
   async function load(s, autoplay, url){
-    if(s.status!=='ready'){ toast('Esa canción todavía no está lista'); return; }
+    if(s.status!=='ready'){ toast(t('toast.notready')); return; }
     current=s;
-    $('#pTitle').textContent=s.title; $('#pSub').textContent=`${s.genre} · ${s.voice}`;
+    $('#pTitle').textContent=s.title; $('#pSub').textContent=`${gl(s.genre)} · ${vl(s.voice)}`;
     $('#pCover').style.background=coverBg(s); $('#tot').textContent=fmt(s.dur); $('#cur').textContent='0:00'; $('#fill').style.width='0';
     try{
-      $('#pSub').textContent='Cargando…';
+      $('#pSub').textContent=t('player.loading');
       audio.src = url || await freshUrl(s);
-      $('#pSub').textContent=`${s.genre} · ${s.voice}`;
+      $('#pSub').textContent=`${gl(s.genre)} · ${vl(s.voice)}`;
       if(autoplay) await audio.play();
-    }catch(e){ $('#pSub').textContent=`${s.genre} · ${s.voice}`; toast(e.message && !/play\(\)/.test(e.message) ? e.message : 'Toca ▶ para reproducir'); }
+    }catch(e){ $('#pSub').textContent=`${gl(s.genre)} · ${vl(s.voice)}`; toast(e.message && !/play\(\)/.test(e.message) ? e.message : t('toast.tapplay')); }
   }
   function play(){
-    if(!current){ const f=songs.find(x=>x.status==='ready'); if(f) load(f,true); else toast('Crea una canción primero'); return; }
-    audio.play().catch(()=>toast('No se pudo reproducir. Intenta de nuevo.'));
+    if(!current){ const f=songs.find(x=>x.status==='ready'); if(f) load(f,true); else toast(t('toast.createfirst')); return; }
+    audio.play().catch(()=>toast(t('toast.playerr')));
   }
   function stop(){ audio.pause(); }
   function toggle(){ playing?stop():play(); }
@@ -695,7 +806,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   audio.addEventListener('loadedmetadata',()=>{ if(current && isFinite(audio.duration)){ current.dur=audio.duration; $('#tot').textContent=fmt(audio.duration); } });
   audio.addEventListener('timeupdate',()=>{ $('#cur').textContent=fmt(audio.currentTime); $('#fill').style.width=(audio.duration?audio.currentTime/audio.duration*100:0)+'%'; });
   audio.addEventListener('ended',()=>step(1));
-  audio.addEventListener('error',()=>{ if(current && audio.src) toast('El enlace de audio venció. Toca ▶ otra vez.'); });
+  audio.addEventListener('error',()=>{ if(current && audio.src) toast(t('toast.expired')); });
   function step(d){
     const ready=songs.filter(x=>x.status==='ready'); if(!ready.length) return;
     const i=current?ready.findIndex(x=>x.id===current.id):-1;
@@ -706,35 +817,42 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   $('#rail').onclick=e=>{ if(!current||!audio.duration) return; const r=e.currentTarget.getBoundingClientRect(); audio.currentTime=(e.clientX-r.left)/r.width*audio.duration; };
 
   /* ---------- planes ---------- */
-  $$('[data-plan]').forEach(b=>b.onclick=()=>{
-    if(b.dataset.plan==='Demo'){ toast('Ya estás en el plan Demo'); return; }
-    toast(`Los pagos para el plan ${b.dataset.plan} se activan pronto.`);
+  function renderPlans(){
+    const P=[['demo','$0','<small>'+t('plan.demo.p')+'</small>',''],['estudio','$9.99','<small>'+t('plan.month')+'</small>',' hot'],['productor','$24.99','<small>'+t('plan.month')+'</small>','']];
+    $('#plansGrid').innerHTML=P.map(([k,price,small,cls])=>`
+      <div class="plan${cls}" data-badge="${t('plan.popular')}">
+        <div class="name">${t('plan.'+k)}</div>
+        <div class="price">${price} ${small}</div>
+        <ul>${t('plan.'+k+'.l').map(x=>'<li>'+x+'</li>').join('')}</ul>
+        <button class="btn ${cls?'btn-primary':'btn-ghost'}" data-plan="${k}">${k==='demo'?t('plan.current'):t('plan.pick',{p:t('plan.'+k)})}</button>
+      </div>`).join('');
+  }
+  $('#plansGrid').addEventListener('click',e=>{
+    const b=e.target.closest('[data-plan]'); if(!b) return;
+    if(b.dataset.plan==='demo'){ toast(t('plan.already')); return; }
+    toast(t('plan.soon',{p:t('plan.'+b.dataset.plan)}));
   });
 
   /* ---------- perfil ---------- */
   function renderProfile(){
     $('#uname').value=profile.name; $('#uemail').value=profile.email;
-    $('#statSongs').textContent=songs.filter(s=>s.status==='ready').length; $('#statCredits').textContent=credits; $('#statPlan').textContent=plan;
+    $('#statSongs').textContent=songs.filter(s=>s.status==='ready').length; $('#statCredits').textContent=credits; $('#statPlan').textContent=t('plan.'+plan);
   }
   $('#saveProfile').onclick=async()=>{
     const name=$('#uname').value.trim().slice(0,60);
     const {error}=await sb.from('profiles').update({display_name:name}).eq('id',me.id);
-    if(error){ toast('No se pudo guardar. Intenta de nuevo.'); return; }
-    profile.name=name; toast('Perfil guardado');
+    if(error){ toast(t('prof.saveerr')); return; }
+    profile.name=name; toast(t('prof.saved'));
   };
   $('#logoutBtn').onclick=()=>sb.auth.signOut();
 
   /* ---------- cuentas (Supabase Auth) ---------- */
   let authMode='login';
   const AUTH_ERR = [
-    [/invalid login/i,'Correo o contraseña incorrectos.'],
-    [/not confirmed/i,'Primero confirma tu correo (te enviamos un enlace).'],
-    [/already registered|already been registered/i,'Ese correo ya tiene cuenta. Usa "Entrar".'],
-    [/at least|weak/i,'La contraseña es muy corta o débil (mínimo 8 caracteres).'],
-    [/rate limit|too many|security purposes/i,'Demasiados intentos. Espera unos minutos.'],
-    [/invalid.*email|valid email/i,'Escribe un correo válido.']
+    [/invalid login/i,'auth.e.login'],[/not confirmed/i,'auth.e.confirm'],[/already registered|already been registered/i,'auth.e.exists'],
+    [/at least|weak/i,'auth.e.weak'],[/rate limit|too many|security purposes/i,'auth.e.rate'],[/invalid.*email|valid email/i,'auth.e.mail']
   ];
-  const authErr = e => { const m=(e&&e.message)||''; const f=AUTH_ERR.find(x=>x[0].test(m)); return f?f[1]:'No se pudo completar. Intenta de nuevo.'; };
+  const authErr = e => { const m=(e&&e.message)||''; const f=AUTH_ERR.find(x=>x[0].test(m)); return t(f?f[1]:'auth.e.generic'); };
   const authMsg = (t,ok)=>{ const m=$('#authMsg'); m.textContent=t||''; m.classList.toggle('ok',!!ok); };
   function showAuth(mode){
     authMode = mode||authMode;
@@ -743,35 +861,35 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     $('#forgotBtn').style.display = authMode==='login'?'':'none';
     $('#fEmail').style.display = rec?'none':'';
     $$('#authTabs button').forEach(b=>b.classList.toggle('on', b.dataset.m===authMode));
-    $('#authTitle').textContent = rec?'Nueva contraseña':authMode==='signup'?'Crea tu cuenta':'Entra al estudio';
-    $('#authSub').textContent = rec?'Escribe tu nueva contraseña.':authMode==='signup'?'Empiezas con 2 canciones de regalo.':'Inicia sesión para crear y guardar tus canciones.';
-    $('#aPassLbl').textContent = rec?'Nueva contraseña':'Contraseña';
+    $('#authTitle').textContent = t(rec?'auth.t.rec':authMode==='signup'?'auth.t.signup':'auth.t.login');
+    $('#authSub').textContent = t(rec?'auth.s.rec':authMode==='signup'?'auth.s.signup':'auth.s.login');
+    $('#aPassLbl').textContent = t(rec?'auth.newpass':'auth.pass');
     $('#aPass').autocomplete = authMode==='login'?'current-password':'new-password';
-    $('#authGo').textContent = rec?'Guardar contraseña':authMode==='signup'?'Crear cuenta':'Entrar';
+    $('#authGo').textContent = t(rec?'auth.savepass':authMode==='signup'?'auth.signup':'auth.enter');
     authMsg(''); $('#auth').classList.add('show');
   }
   const hideAuth = ()=>$('#auth').classList.remove('show');
   $('#authTabs').onclick=e=>{ const b=e.target.closest('button'); if(b) showAuth(b.dataset.m); };
   $('#forgotBtn').onclick=async()=>{
     const email=$('#aEmail').value.trim();
-    if(!email){ authMsg('Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña".'); return; }
+    if(!email){ authMsg(t('auth.forgot.need')); return; }
     const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin});
-    error ? authMsg(authErr(error)) : authMsg('Te enviamos un correo para cambiar tu contraseña.',true);
+    error ? authMsg(authErr(error)) : authMsg(t('auth.forgot.sent'),true);
   };
   $('#authForm').onsubmit=async e=>{
     e.preventDefault();
     const email=$('#aEmail').value.trim(), pass=$('#aPass').value;
-    if(authMode!=='recovery' && !/^\S+@\S+\.\S+$/.test(email)){ authMsg('Escribe un correo válido.'); return; }
-    if(authMode!=='login' && pass.length<8){ authMsg('La contraseña debe tener mínimo 8 caracteres.'); return; }
-    if(!pass){ authMsg('Escribe tu contraseña.'); return; }
+    if(authMode!=='recovery' && !/^\S+@\S+\.\S+$/.test(email)){ authMsg(t('auth.e.mail')); return; }
+    if(authMode!=='login' && pass.length<8){ authMsg(t('auth.e.min')); return; }
+    if(!pass){ authMsg(t('auth.e.nopass')); return; }
     $('#authGo').disabled=true; authMsg('');
     try{
       if(authMode==='recovery'){
         const {error}=await sb.auth.updateUser({password:pass}); if(error) throw error;
-        toast('Contraseña actualizada'); hideAuth(); history.replaceState(null,'',location.pathname+'#inicio');
+        toast(t('auth.passok')); hideAuth(); history.replaceState(null,'',location.pathname+'#inicio');
       } else if(authMode==='signup'){
         const {data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:location.origin}}); if(error) throw error;
-        if(!data.session) authMsg('¡Listo! Te enviamos un correo para confirmar tu cuenta. Ábrelo y luego entra.',true);
+        if(!data.session) authMsg(t('auth.signup.ok'),true);
       } else {
         const {error}=await sb.auth.signInWithPassword({email,password:pass}); if(error) throw error;
       }
@@ -788,7 +906,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     songs.filter(s=>s.status==='pending').forEach(s=>waitFor(s,false));
   }
   function leave(){
-    me=null; songs=[]; credits=0; plan='Demo'; profile={name:'',email:''}; current=null;
+    me=null; songs=[]; credits=0; plan='demo'; profile={name:'',email:''}; current=null;
     stop(); resetPlayer(); renderCredits(); renderLibrary(); $('#aPass').value=''; showAuth('login');
   }
   sb.auth.onAuthStateChange((ev,session)=>{
@@ -806,6 +924,30 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   function heroAnim(){ $$('.fader .cap').forEach(c=>c.style.bottom=(15+Math.random()*80)+'px'); }
   heroAnim(); setInterval(heroAnim,1300);
   setInterval(()=>['#n1','#n2'].forEach(n=>$(n).style.transform=`rotate(${-30+Math.random()*55}deg)`),220);
+
+  /* ---------- aplicar idioma ---------- */
+  function applyLang(){
+    document.documentElement.lang = lang;
+    document.title = t('meta.title');
+    $$('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+    $$('[data-i18n-html]').forEach(el=>el.innerHTML=t(el.dataset.i18nHtml));
+    $$('[data-i18n-ph]').forEach(el=>el.placeholder=t(el.dataset.i18nPh));
+    $$('[data-lang-toggle]').forEach(b=>b.textContent = lang==='es' ? 'EN' : 'ES');
+    chips($('#genres'), GENRES, 'genre', gl);
+    chips($('#voices'), VOICES, 'voice', vl);
+    const mv=$('#mood').value; $('#mood').innerHTML=MOODS.map(m=>`<option value="${m}">${ml(m)}</option>`).join(''); if(mv) $('#mood').value=mv;
+    $('#tools').innerHTML=TOOLS.map(k=>`<button data-tag="${t('tag.'+k)}">${t('tool.'+k)}</button>`).join('');
+    renderPlans(); renderCredits(); renderLibrary(); renderProfile();
+    if(!current){ $('#pTitle').textContent=t('player.none'); $('#pSub').textContent=t('player.pick'); }
+    if($('#auth').classList.contains('show')) showAuth();
+  }
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('[data-lang-toggle]')) return;
+    lang = lang==='es' ? 'en' : 'es'; store.set('lang',lang);
+    $('#songLang').value = lang; applyLang();
+  });
+  $('#songLang').value = lang;
+  applyLang();
 
   /* ---------- inicio ---------- */
   renderCredits();
