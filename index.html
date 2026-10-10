@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brielle — Tu estudio de canciones con IA</title>
 <meta name="description" content="Brielle convierte tus letras en canciones completas con inteligencia artificial.">
-<meta name="theme-color" content="#15103A">
+<meta name="theme-color" content="#0C0724">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230f0d0b'/><circle cx='32' cy='32' r='18' fill='none' stroke='%23f2a93b' stroke-width='5'/><circle cx='32' cy='32' r='5' fill='%23f2a93b'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,9 +13,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{
-  --bg:#15103A; --panel:#211A52; --panel-2:#2D2470; --ink:#0A0720;
-  --text:#FFF4E6; --muted:#B9B2E0; --line:rgba(255,244,230,.18);
-  --amber:#FF5A6E; --amber-2:#FFD23F; --lagoon:#38E1C9; --red:#FF5A6E; --green:#38E1C9;
+  --bg:#0C0724; --panel:#160F3D; --panel-2:#21165C; --ink:#05030F;
+  --text:#FFF4E6; --muted:#BDB4F5; --line:rgba(255,244,230,.18);
+  --amber:#FF2D95; --amber-2:#EEFF2E; --lagoon:#00F5E0; --red:#FF2D95; --green:#00F5E0;
   --display:'Bricolage Grotesque','Arial Black',system-ui,sans-serif; --body:'DM Sans',system-ui,sans-serif;
   --shadow:4px 4px 0 var(--ink);
 }
@@ -56,21 +56,22 @@ h2{font-size:clamp(30px,4.2vw,46px);line-height:1;margin-bottom:10px}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 26px;border-radius:16px;font-weight:700;border:2px solid var(--ink);box-shadow:var(--shadow);transition:transform .08s,box-shadow .08s}
-.btn-primary{background:var(--amber);color:var(--ink)}
+.btn-primary{background:var(--amber);color:var(--ink);box-shadow:var(--shadow),0 0 24px rgba(255,45,149,.6)}
 .btn-ghost{background:var(--panel);color:var(--text);border-color:var(--line);box-shadow:none}
 .btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.btn-primary:hover{box-shadow:5px 5px 0 var(--ink),0 0 32px rgba(255,45,149,.75)}
 .btn-ghost:hover{box-shadow:none;transform:none;border-color:var(--amber-2);color:var(--amber-2)}
 .btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:var(--shadow)}
 
 /* Home */
 .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;margin:8px 0 72px}
-.hero h1{text-shadow:5px 5px 0 var(--amber)}
+.hero h1{text-shadow:5px 5px 0 var(--amber),0 0 40px rgba(255,45,149,.55)}
 .hero h1 span{display:block}
 .hero .lead{color:var(--muted);font-size:19px;margin:28px 0 30px;max-width:46ch}
 .hero .actions{display:flex;gap:14px;flex-wrap:wrap}
 .stage{position:relative;padding:20px 12px}
-.songcard{background:var(--amber-2);color:var(--ink);border:3px solid var(--ink);border-radius:32px;padding:22px;box-shadow:10px 10px 0 var(--ink);transform:rotate(-3deg);max-width:400px;margin:0 auto}
+.songcard{background:var(--amber-2);box-shadow:10px 10px 0 var(--ink),0 0 60px rgba(238,255,46,.35);color:var(--ink);border:3px solid var(--ink);border-radius:32px;padding:22px;transform:rotate(-3deg);max-width:400px;margin:0 auto}
 .sc-top{display:flex;align-items:center;gap:14px}
 .sc-cover{width:62px;height:62px;border-radius:50%;background:var(--ink);position:relative;flex-shrink:0;animation:spin 6s linear infinite}
 .sc-cover::after{content:"";position:absolute;inset:20px;border-radius:50%;background:var(--amber)}
@@ -122,7 +123,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 .song{background:var(--panel);border:2px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:var(--shadow);transition:transform .1s,box-shadow .1s}
 .song:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
 .cover{aspect-ratio:1;position:relative;display:grid;place-items:center;border-bottom:2px solid var(--ink)}
-.cover .disc{width:60%;aspect-ratio:1;border-radius:50%;background:repeating-radial-gradient(var(--ink) 0 2px,#1d1654 2px 4px);display:grid;place-items:center;box-shadow:5px 5px 0 rgba(10,7,32,.45)}
+.cover .disc{width:60%;aspect-ratio:1;border-radius:50%;background:repeating-radial-gradient(var(--ink) 0 2px,#1a1050 2px 4px);display:grid;place-items:center;box-shadow:5px 5px 0 rgba(5,3,15,.45)}
 .cover .disc i{width:34%;aspect-ratio:1;border-radius:50%;display:block;border:2px solid var(--ink)}
 .song.playing .disc{animation:spin 3s linear infinite}
 .cover .play{position:absolute;right:12px;bottom:12px;width:46px;height:46px;border-radius:50%;background:var(--lagoon);color:var(--ink);display:grid;place-items:center;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);font-weight:800}
@@ -175,7 +176,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 .meters i{width:5px;background:var(--lagoon);border-radius:2px;height:4px;transition:height .12s}
 
 /* Modal */
-.modal{position:fixed;inset:0;background:rgba(10,7,32,.82);display:none;place-items:center;z-index:50;padding:16px}
+.modal{position:fixed;inset:0;background:rgba(5,3,15,.82);display:none;place-items:center;z-index:50;padding:16px}
 .modal.show{display:grid}
 .studio{width:100%;max-width:460px;background:var(--panel);border:2px solid var(--ink);border-radius:28px;padding:28px;text-align:center;box-shadow:8px 8px 0 var(--ink)}
 .studio h2{margin-bottom:6px}
@@ -962,7 +963,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const wave=$('#wave'); for(let i=0;i<30;i++){ const b=document.createElement('i'); b.style.animationDelay=(-Math.random()*1.1).toFixed(2)+'s'; b.style.animationDuration=(0.7+Math.random()*0.8).toFixed(2)+'s'; wave.appendChild(b); }
   const lines=$$('#cardLyr p'); let li=0;
   setInterval(()=>{ lines[li].classList.remove('on'); li=(li+1)%lines.length; lines[li].classList.add('on'); }, 2400);
-  const cloudColors=['#FFD23F','#FF5A6E','#38E1C9','#FFF4E6'];
+  const cloudColors=['#EEFF2E','#FF2D95','#00F5E0','#FFF4E6'];
   $('#cloud').innerHTML=GENRES.map((g,i)=>`<span style="background:${cloudColors[i%4]};transform:rotate(${[-2,1.5,-1,2.5][i%4]}deg)">${esc(g)}</span>`).join('');
   function paintCloud(){ [...$('#cloud').children].forEach((el,i)=>el.textContent=gl(GENRES[i])); }
 
