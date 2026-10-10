@@ -89,7 +89,8 @@ create policy "canciones propias: borrado" on public.songs
 revoke all on public.profiles from anon, authenticated;
 revoke all on public.songs    from anon, authenticated;
 
-grant select on public.profiles to authenticated;
+-- Solo estas columnas son visibles desde el navegador (los datos de Stripe quedan solo en el servidor).
+grant select (id, email, plan, display_name, credits, current_period_end, created_at) on public.profiles to authenticated;
 grant update (display_name) on public.profiles to authenticated;  -- créditos y plan NO se pueden editar desde el navegador
 grant select on public.songs    to anon, authenticated;
 grant update (title, liked, is_public) on public.songs to authenticated;  -- solo estos campos
@@ -97,6 +98,15 @@ grant delete on public.songs to authenticated;
 
 grant all on public.profiles to service_role;
 grant all on public.songs    to service_role;
+
+-- ───────────── Eventos de Stripe ya procesados (evita activar dos veces el mismo pago) ─────────────
+create table if not exists public.stripe_events (
+  id         text primary key,
+  created_at timestamptz not null default now()
+);
+alter table public.stripe_events enable row level security;
+revoke all on public.stripe_events from anon, authenticated;
+grant all on public.stripe_events to service_role;
 
 -- ───────────── Perfil automático al registrarse ─────────────
 create or replace function public.handle_new_user()

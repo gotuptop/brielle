@@ -73,4 +73,33 @@ async function uploadAudio(path, buffer, contentType) {
   if (!res.ok) throw new Error(`storage: ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 
-module.exports = { configured, getUser, rpc, insertSong, getSong, settleSong, patchSong, uploadAudio };
+async function getProfile(id) {
+  const res = await fetch(`${base()}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=*`, { headers: h() });
+  if (!res.ok) return null;
+  return (await res.json())[0] || null;
+}
+async function profileByCustomer(customerId) {
+  const res = await fetch(`${base()}/rest/v1/profiles?stripe_customer_id=eq.${encodeURIComponent(customerId)}&select=*`, { headers: h() });
+  if (!res.ok) return null;
+  return (await res.json())[0] || null;
+}
+async function patchProfile(id, patch) {
+  const res = await fetch(`${base()}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH', headers: h({ 'Content-Type': 'application/json' }), body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error(`update profile: ${res.status} ${(await res.text()).slice(0, 200)}`);
+}
+// Registra un evento de Stripe para no procesarlo dos veces. true = nuevo, false = ya visto.
+async function recordEvent(id) {
+  const res = await fetch(`${base()}/rest/v1/stripe_events`, {
+    method: 'POST', headers: h({ 'Content-Type': 'application/json' }), body: JSON.stringify({ id }),
+  });
+  if (res.status === 409) return false;
+  if (!res.ok) throw new Error(`record event: ${res.status} ${(await res.text()).slice(0, 200)}`);
+  return true;
+}
+async function forgetEvent(id) {
+  await fetch(`${base()}/rest/v1/stripe_events?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: h() });
+}
+
+module.exports = { getProfile, profileByCustomer, patchProfile, recordEvent, forgetEvent, configured, getUser, rpc, insertSong, getSong, settleSong, patchSong, uploadAudio };

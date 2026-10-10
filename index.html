@@ -347,7 +347,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
           <button class="btn btn-primary" id="saveProfile" style="margin-top:18px" data-i18n="prof.save">Guardar</button>
         </div>
         <div class="card"><label class="counter" data-i18n="prof.songs">CANCIONES CREADAS</label><div class="stat" id="statSongs">0</div><label class="counter" data-i18n="prof.avail">CANCIONES DISPONIBLES</label><div class="stat" id="statCredits">0</div></div>
-        <div class="card"><label class="counter" data-i18n="prof.plan">PLAN ACTUAL</label><div class="stat" id="statPlan">Demo</div><p class="hint" style="margin-bottom:14px" data-i18n="prof.hint">Los pagos de los planes se activan pronto.</p><button class="btn btn-ghost" id="logoutBtn" data-i18n="prof.logout">Cerrar sesión</button></div>
+        <div class="card"><label class="counter" data-i18n="prof.plan">PLAN ACTUAL</label><div class="stat" id="statPlan">Demo</div><button class="btn btn-primary" id="manageBtn" style="margin-bottom:12px"></button><button class="btn btn-ghost" id="logoutBtn" data-i18n="prof.logout">Cerrar sesión</button></div>
       </div>
     </section>
   </main>
@@ -465,7 +465,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'plan.demo.l':['2 canciones gratis para probar','Canciones completas','Licencia Royalty-Free (uso personal y redes sociales)','Biblioteca personal'],
       'plan.estudio.l':['20 canciones al mes','Licencia Royalty-Free (uso personal y redes sociales)','Todos los géneros y voces','Descargas en alta calidad'],
       'plan.productor.l':['<b>60 canciones al mes</b> (el triple que Estudio)','Licencia de distribución: publica en Spotify, Apple Music y más','Todos los géneros y voces','Soporte prioritario'],
-      'plan.current':'Plan actual','plan.popular':'MÁS POPULAR','plan.pick':'Elegir {p}','plan.already':'Ya estás en el plan Demo','plan.soon':'Los pagos para el plan {p} se activan pronto.',
+      'plan.current':'Plan actual','plan.free':'Plan gratis','plan.manage':'Administrar suscripción','pay.go':'Te llevamos al pago seguro…','pay.ok':'¡Pago recibido! Activando tu plan…','pay.active':'¡Tu plan ya está activo!','pay.cancel':'Pago cancelado. No se hizo ningún cargo.','pay.err':'No se pudo abrir el pago. Intenta de nuevo.','prof.choose':'Elige un plan para crear más canciones.','plan.popular':'MÁS POPULAR','plan.pick':'Elegir {p}','plan.already':'Ya estás en el plan Demo','plan.soon':'Los pagos para el plan {p} se activan pronto.',
       'prof.h2':'Mi perfil','prof.sub':'Tu información y tu actividad en el estudio.','prof.name':'Nombre artístico','prof.name.ph':'Tu nombre',
       'prof.email':'Correo electrónico','prof.save':'Guardar','prof.songs':'CANCIONES CREADAS','prof.avail':'CANCIONES DISPONIBLES','prof.plan':'PLAN ACTUAL',
       'prof.hint':'Los pagos de los planes se activan pronto.','prof.logout':'Cerrar sesión','prof.saved':'Perfil guardado','prof.saveerr':'No se pudo guardar. Intenta de nuevo.',
@@ -525,7 +525,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'plan.demo.l':['2 free songs to try','Full-length songs','Royalty-Free license (personal and social media use)','Personal library'],
       'plan.estudio.l':['20 songs per month','Royalty-Free license (personal and social media use)','All genres and voices','High-quality downloads'],
       'plan.productor.l':['<b>60 songs per month</b> (triple the Studio plan)','Distribution license: publish on Spotify, Apple Music and more','All genres and voices','Priority support'],
-      'plan.current':'Current plan','plan.popular':'MOST POPULAR','plan.pick':'Choose {p}','plan.already':'You are already on the Demo plan','plan.soon':'Payments for the {p} plan are coming soon.',
+      'plan.current':'Current plan','plan.free':'Free plan','plan.manage':'Manage subscription','pay.go':'Taking you to secure checkout…','pay.ok':'Payment received! Activating your plan…','pay.active':'Your plan is now active!','pay.cancel':'Payment canceled. You were not charged.','pay.err':'Could not open checkout. Please try again.','prof.choose':'Choose a plan to create more songs.','plan.popular':'MOST POPULAR','plan.pick':'Choose {p}','plan.already':'You are already on the Demo plan','plan.soon':'Payments for the {p} plan are coming soon.',
       'prof.h2':'My profile','prof.sub':'Your information and your activity in the studio.','prof.name':'Artist name','prof.name.ph':'Your name',
       'prof.email':'Email','prof.save':'Save','prof.songs':'SONGS CREATED','prof.avail':'SONGS AVAILABLE','prof.plan':'CURRENT PLAN',
       'prof.hint':'Plan payments are coming soon.','prof.logout':'Log out','prof.saved':'Profile saved','prof.saveerr':'Could not save. Please try again.',
@@ -594,10 +594,10 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     songs = data.map(norm);
   }
   async function loadProfile(){
-    const {data} = await sb.from('profiles').select('*').eq('id',me.id).maybeSingle();
+    const {data} = await sb.from('profiles').select('id,email,plan,display_name,credits,current_period_end').eq('id',me.id).maybeSingle();
     if(data){ credits=data.credits; plan=data.plan||'demo'; profile={name:data.display_name||'',email:data.email||me.email||''}; }
     else profile={name:'',email:me.email||''};
-    renderCredits();
+    renderCredits(); renderPlans(); renderProfile();
   }
 
   /* ---------- servidor (funciones de Netlify) ---------- */
@@ -864,18 +864,34 @@ input[type=range]{width:100%;accent-color:var(--amber)}
         <div class="name">${t('plan.'+k)}</div>
         <div class="price">${price} ${small}</div>
         <ul>${t('plan.'+k+'.l').map(x=>'<li>'+x+'</li>').join('')}</ul>
-        <button class="btn ${cls?'btn-primary':'btn-ghost'}" data-plan="${k}">${k==='demo'?t('plan.current'):t('plan.pick',{p:t('plan.'+k)})}</button>
+        <button class="btn ${cls?'btn-primary':'btn-ghost'}" data-plan="${k}">${k===plan ? t('plan.current') : k==='demo' ? t('plan.free') : plan!=='demo' ? t('plan.manage') : t('plan.pick',{p:t('plan.'+k)})}</button>
       </div>`).join('');
+  }
+  async function openUrl(path, body){
+    toast(t('pay.go'));
+    try{ const r = await api(path,{method:'POST', body:JSON.stringify(body||{})}); if(r.url) location.href = r.url; else throw new Error(); }
+    catch(e){ if(e.auth) return; toast(e.code==='AlreadySubscribed' ? t('plan.manage') : t('pay.err')); if(e.code==='AlreadySubscribed') loadProfile().then(()=>{ renderPlans(); renderProfile(); }); }
   }
   $('#plansGrid').addEventListener('click',e=>{
     const b=e.target.closest('[data-plan]'); if(!b) return;
-    if(b.dataset.plan==='demo'){ toast(t('plan.already')); return; }
-    toast(t('plan.soon',{p:t('plan.'+b.dataset.plan)}));
+    const k=b.dataset.plan;
+    if(k===plan || k==='demo'){ if(k===plan && plan!=='demo') openUrl('create-portal'); else toast(k===plan ? t('plan.already') : t('plan.free')); return; }
+    if(plan!=='demo'){ openUrl('create-portal'); return; }
+    openUrl('create-checkout',{plan:k});
   });
+  // Al volver del pago, esperar a que Stripe avise (unos segundos) y refrescar créditos.
+  async function afterCheckout(){
+    const q=new URLSearchParams(location.search), c=q.get('checkout'); if(!c) return;
+    history.replaceState(null,'',location.pathname+(location.hash||'#perfil'));
+    if(c==='cancel'){ toast(t('pay.cancel')); return; }
+    toast(t('pay.ok'));
+    for(let i=0;i<15;i++){ await sleep(2000); await loadProfile(); if(plan!=='demo'){ renderPlans(); renderProfile(); toast(t('pay.active')); return; } }
+  }
 
   /* ---------- perfil ---------- */
   function renderProfile(){
     $('#uname').value=profile.name; $('#uemail').value=profile.email;
+    $('#manageBtn').textContent = plan==='demo' ? t('plans.view') : t('plan.manage');
     $('#statSongs').textContent=songs.filter(s=>s.status==='ready').length; $('#statCredits').textContent=credits; $('#statPlan').textContent=t('plan.'+plan);
   }
   $('#saveProfile').onclick=async()=>{
@@ -885,6 +901,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     profile.name=name; toast(t('prof.saved'));
   };
   $('#logoutBtn').onclick=()=>sb.auth.signOut();
+  $('#manageBtn').onclick=()=>{ if(plan==='demo') go('planes'); else openUrl('create-portal'); };
 
   /* ---------- cuentas (Supabase Auth) ---------- */
   let authMode='login';
@@ -944,6 +961,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     const v=location.hash.slice(1); go(v&&v!=='access_token'&&!v.includes('=')?v:'inicio');
     // Si quedaron canciones grabándose (se cerró la página), seguir revisándolas en segundo plano.
     songs.filter(s=>s.status==='pending').forEach(s=>waitFor(s,false));
+    afterCheckout();
   }
   function leave(){
     me=null; songs=[]; credits=0; plan='demo'; profile={name:'',email:''}; current=null;
