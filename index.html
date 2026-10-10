@@ -366,6 +366,19 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   </div>
 </div>
 
+<!-- LYRICS -->
+<div class="modal" id="lyrModal">
+  <div class="studio" style="max-width:520px;text-align:left">
+    <h2 id="lyrTitle" style="margin-bottom:12px"></h2>
+    <pre id="lyrText" style="white-space:pre-wrap;font:15px/1.6 var(--body);max-height:50vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px"></pre>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-primary" id="lyrCopy" data-i18n="lyr.copy">Copiar</button>
+      <button class="btn btn-ghost" id="lyrDl" data-i18n="lyr.dl">Descargar .txt</button>
+      <button class="btn btn-ghost" id="lyrClose" data-i18n="lyr.close">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- AUTH -->
 <div class="modal" id="auth">
   <div class="studio">
@@ -464,7 +477,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'toast.noaudio':'El audio todavía no está disponible.','toast.audioerr':'No se pudo obtener el audio. Intenta de nuevo.','toast.dl':'Preparando descarga…',
       'toast.waitdel':'Espera a que termine de grabarse antes de eliminarla.','confirm.del':'¿Eliminar "{t}" de tu biblioteca?','toast.delerr':'No se pudo eliminar. Intenta de nuevo.',
       'toast.notready':'Esa canción todavía no está lista','player.loading':'Cargando…','toast.tapplay':'Toca ▶ para reproducir','toast.createfirst':'Crea una canción primero',
-      'toast.playerr':'No se pudo reproducir. Intenta de nuevo.','toast.expired':'El enlace de audio venció. Toca ▶ otra vez.'
+      'toast.playerr':'No se pudo reproducir. Intenta de nuevo.','toast.expired':'El enlace de audio venció. Toca ▶ otra vez.',
+      'lyr.btn':'Letra','lyr.copy':'Copiar','lyr.dl':'Descargar .txt','lyr.close':'Cerrar','lyr.copied':'Letra copiada','lyr.none':'Esta canción no tiene letra (instrumental).'
     },
     en: {
       'meta.title':'Brielle — Your AI song studio',
@@ -524,7 +538,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'toast.noaudio':'The audio is not available yet.','toast.audioerr':'Could not get the audio. Please try again.','toast.dl':'Preparing download…',
       'toast.waitdel':'Wait for it to finish recording before deleting it.','confirm.del':'Delete "{t}" from your library?','toast.delerr':'Could not delete. Please try again.',
       'toast.notready':'That song is not ready yet','player.loading':'Loading…','toast.tapplay':'Tap ▶ to play','toast.createfirst':'Create a song first',
-      'toast.playerr':'Could not play. Please try again.','toast.expired':'The audio link expired. Tap ▶ again.'
+      'toast.playerr':'Could not play. Please try again.','toast.expired':'The audio link expired. Tap ▶ again.',
+      'lyr.btn':'Lyrics','lyr.copy':'Copy','lyr.dl':'Download .txt','lyr.close':'Close','lyr.copied':'Lyrics copied','lyr.none':'This song has no lyrics (instrumental).'
     }
   };
   const GENRE_LABEL = {en:{'Balada':'Ballad','Reggaetón':'Reggaeton','Acústico':'Acoustic'}, es:{}};
@@ -755,7 +770,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
         </div>
         <div class="meta">
           <div class="t">${esc(s.title)}</div>
-          <div class="s"><span>${meta}</span><span class="acts">${s.status==='ready'?`<button class="dl" data-act="dl" aria-label="${t('lib.dl')}" title="${t('lib.dl')}">⬇</button>`:''}<button class="del" data-act="del" aria-label="${t('lib.del')}" title="${t('lib.del')}">✕</button></span></div>
+          <div class="s"><span>${meta}</span><span class="acts"><button class="dl" data-act="lyr" aria-label="${t('lyr.btn')}" title="${t('lyr.btn')}">☰</button>${s.status==='ready'?`<button class="dl" data-act="dl" aria-label="${t('lib.dl')}" title="${t('lib.dl')}">⬇</button>`:''}<button class="del" data-act="del" aria-label="${t('lib.del')}" title="${t('lib.del')}">✕</button></span></div>
         </div>
       </div>`;}).join('');
   }
@@ -765,6 +780,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     const act=b.dataset.act;
     if(act==='play'){ if(current&&current.id===s.id) toggle(); else load(s,true); }
     if(act==='check') checkNow(s);
+    if(act==='lyr'){ lyrSong=s; $('#lyrTitle').textContent=s.title; $('#lyrText').textContent=s.lyrics||t('lyr.none'); $('#lyrModal').classList.add('show'); }
     if(act==='dl'){ try{ toast(t('toast.dl')); window.open(await freshUrl(s,true),'_blank'); }catch(err){ toast(err.message); } }
     if(act==='del' && s.status==='pending'){ toast(t('toast.waitdel')); return; }
     if(act==='del' && confirm(t('confirm.del',{t:s.title}))){
@@ -776,6 +792,15 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       renderLibrary();
     }
   });
+
+  let lyrSong=null;
+  $('#lyrClose').onclick=()=>$('#lyrModal').classList.remove('show');
+  $('#lyrCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(lyrSong.lyrics||''); toast(t('lyr.copied')); }catch(e){ const r=document.createRange(); r.selectNodeContents($('#lyrText')); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(r); } };
+  $('#lyrDl').onclick=()=>{
+    if(!lyrSong||!lyrSong.lyrics) return;
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([lyrSong.title+'\n\n'+lyrSong.lyrics],{type:'text/plain;charset=utf-8'}));
+    a.download=(lyrSong.title.replace(/[^\w\-áéíóúñÁÉÍÓÚÑ ]+/g,'').trim()||'letra')+'.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
 
   /* ---------- reproductor con audio real ---------- */
   const audio=new Audio(); audio.preload='auto';
