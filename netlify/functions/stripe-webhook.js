@@ -1,6 +1,6 @@
 // Brielle — recibe los avisos de Stripe y activa/renueva/cancela los planes.
 //  * invoice.paid (alta y cada renovación)  -> plan activo + créditos del mes
-//  * customer.subscription.updated/deleted  -> fecha de renovación / vuelve a Demo
+//  * customer.subscription.updated/deleted  -> fecha de renovación / vuelve a Demo con 0 canciones
 // Cada evento se procesa una sola vez (tabla stripe_events).
 const sb = require('../lib/supabase');
 const stripe = require('../lib/stripe');
@@ -34,7 +34,13 @@ async function handle(ev) {
     // Ignorar suscripciones viejas que no son la actual del usuario.
     if (profile.stripe_subscription_id && profile.stripe_subscription_id !== obj.id) return;
     const dead = ev.type === 'customer.subscription.deleted' || ['canceled', 'unpaid', 'incomplete_expired'].includes(obj.status);
-    if (dead) await sb.patchProfile(profile.id, { plan: 'demo', stripe_subscription_id: null, current_period_end: null });
+    if (dead) {
+      const patch = { plan: 'demo', stripe_subscription_id: null, current_period_end: null };
+      // Si era la suscripción pagada del usuario, sus canciones del plan se acaban con ella
+      // (las 2 de Demo son de una sola vez). Un pago que nunca se completó no toca los créditos.
+      if (profile.stripe_subscription_id === obj.id) patch.credits = 0;
+      await sb.patchProfile(profile.id, patch);
+    }
     else await sb.patchProfile(profile.id, { current_period_end: iso(obj.current_period_end || (obj.items && obj.items.data[0] && obj.items.data[0].current_period_end)) });
   }
 }

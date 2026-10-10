@@ -146,8 +146,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 .plan:nth-child(3){background:var(--amber-2);color:var(--ink)}
 .plan.hot::before{content:attr(data-badge);position:absolute;top:-14px;left:24px;background:var(--ink);color:var(--amber-2);font-weight:700;font-size:13px;padding:4px 12px;border-radius:999px}
 .plan .name{font-family:var(--display);font-weight:800;font-size:32px;letter-spacing:-.02em}
-.plan .price{font-family:var(--display);font-weight:800;font-size:52px;line-height:1;margin:10px 0 2px;letter-spacing:-.03em}
-.plan .price small{font-family:var(--body);font-weight:500;font-size:15px;opacity:.75;letter-spacing:0}
+.plan .price{font-family:var(--display);font-weight:800;font-size:clamp(40px,4.2vw,52px);line-height:1;margin:10px 0 2px;letter-spacing:-.03em;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.plan .price small{font-family:var(--body);font-weight:500;font-size:15px;opacity:.75;letter-spacing:0;white-space:nowrap;line-height:1.3}
 .plan ul{list-style:none;margin:20px 0 26px;display:grid;gap:10px;flex:1}
 .plan li{display:flex;gap:10px;font-size:15px;opacity:.9}
 .plan li::before{content:"✓";font-weight:800}
@@ -863,7 +863,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       <div class="plan${cls}" data-badge="${t('plan.popular')}">
         <div class="name">${t('plan.'+k)}</div>
         <div class="price">${price} ${small}</div>
-        <ul>${t('plan.'+k+'.l').map(x=>'<li>'+x+'</li>').join('')}</ul>
+        <ul>${t('plan.'+k+'.l').map(x=>'<li><span>'+x+'</span></li>').join('')}</ul>
         <button class="btn ${cls?'btn-primary':'btn-ghost'}" data-plan="${k}">${k===plan ? t('plan.current') : k==='demo' ? t('plan.free') : plan!=='demo' ? t('plan.manage') : t('plan.pick',{p:t('plan.'+k)})}</button>
       </div>`).join('');
   }
