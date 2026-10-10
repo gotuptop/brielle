@@ -197,6 +197,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 #authMsg.ok{color:var(--lagoon)}
 .linkbtn{color:var(--muted);font-size:14px;text-decoration:underline;margin-top:14px}
 .linkbtn:hover{color:var(--amber-2)}
+.foot{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.foot a{color:var(--muted)}
+.foot a:hover{color:var(--amber-2)}
+.auth-legal{font-size:13px;color:var(--muted);margin-top:14px;line-height:1.45}
+.auth-legal a{color:var(--muted)}
+.auth-legal a:hover{color:var(--amber-2)}
 
 .toast{position:fixed;left:50%;bottom:104px;transform:translateX(-50%) translateY(20px);background:var(--amber-2);color:var(--ink);font-weight:700;border:2px solid var(--ink);box-shadow:var(--shadow);padding:12px 20px;border-radius:16px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%)}
@@ -350,6 +356,13 @@ input[type=range]{width:100%;accent-color:var(--amber)}
         <div class="card"><label class="counter" data-i18n="prof.plan">PLAN ACTUAL</label><div class="stat" id="statPlan">Demo</div><button class="btn btn-primary" id="manageBtn" style="margin-bottom:12px"></button><button class="btn btn-ghost" id="logoutBtn" data-i18n="prof.logout">Cerrar sesión</button></div>
       </div>
     </section>
+
+    <footer class="foot">
+      <a href="terms.html" data-i18n="foot.terms">Términos de uso</a>
+      <a href="privacy.html" data-i18n="foot.privacy">Política de privacidad</a>
+      <a href="terms.html#ai" data-i18n="foot.ai">Contenido con IA</a>
+      <span data-i18n="foot.note">Las canciones de Brielle se crean con inteligencia artificial.</span>
+    </footer>
   </main>
 </div>
 
@@ -411,6 +424,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       <button class="btn btn-primary" id="authGo" type="submit" style="width:100%">Entrar</button>
     </form>
     <button class="linkbtn" id="forgotBtn" type="button" data-i18n="auth.forgot">Olvidé mi contraseña</button>
+    <p class="auth-legal" data-i18n-html="auth.legal"></p>
   </div>
 </div>
 
@@ -464,7 +478,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'plan.demo.p':'para probar','plan.month':'/ mes',
       'plan.demo.l':['2 canciones gratis para probar','Canciones completas','Licencia Royalty-Free (uso personal y redes sociales)','Biblioteca personal'],
       'plan.estudio.l':['20 canciones al mes','Licencia Royalty-Free (uso personal y redes sociales)','Todos los géneros y voces','Descargas en alta calidad'],
-      'plan.productor.l':['<b>60 canciones al mes</b> (el triple que Estudio)','Licencia de distribución: publica en Spotify, Apple Music y más','Todos los géneros y voces','Soporte prioritario'],
+      'plan.productor.l':['<b>60 canciones al mes</b> (el triple que Estudio)','Licencia Royalty-Free (uso personal y redes sociales)','Todos los géneros y voces','Soporte prioritario'],
       'plan.current':'Plan actual','plan.free':'Plan gratis','plan.manage':'Administrar suscripción','pay.go':'Te llevamos al pago seguro…','pay.ok':'¡Pago recibido! Activando tu plan…','pay.active':'¡Tu plan ya está activo!','pay.cancel':'Pago cancelado. No se hizo ningún cargo.','pay.err':'No se pudo abrir el pago. Intenta de nuevo.','prof.choose':'Elige un plan para crear más canciones.','plan.popular':'MÁS POPULAR','plan.pick':'Elegir {p}','plan.already':'Ya estás en el plan Demo','plan.soon':'Los pagos para el plan {p} se activan pronto.',
       'prof.h2':'Mi perfil','prof.sub':'Tu información y tu actividad en el estudio.','prof.name':'Nombre artístico','prof.name.ph':'Tu nombre',
       'prof.email':'Correo electrónico','prof.save':'Guardar','prof.songs':'CANCIONES CREADAS','prof.avail':'CANCIONES DISPONIBLES','prof.plan':'PLAN ACTUAL',
@@ -475,6 +489,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'auth.enter':'Entrar','auth.signup':'Crear cuenta','auth.email':'Correo electrónico','auth.pass':'Contraseña','auth.newpass':'Nueva contraseña','auth.pass.ph':'Mínimo 8 caracteres',
       'auth.forgot':'Olvidé mi contraseña','auth.t.login':'Entra al estudio','auth.t.signup':'Crea tu cuenta','auth.t.rec':'Nueva contraseña',
       'auth.s.login':'Inicia sesión para crear y guardar tus canciones.','auth.s.signup':'Empiezas con 2 canciones de regalo.','auth.s.rec':'Escribe tu nueva contraseña.',
+      'auth.legal':'Al entrar o crear una cuenta aceptas los <a href="terms.html" target="_blank" rel="noopener">Términos de uso</a> y la <a href="privacy.html" target="_blank" rel="noopener">Política de privacidad</a>.',
+      'foot.terms':'Términos de uso','foot.privacy':'Política de privacidad','foot.ai':'Contenido con IA','foot.note':'Las canciones de Brielle se crean con inteligencia artificial.',
       'auth.savepass':'Guardar contraseña','auth.e.login':'Correo o contraseña incorrectos.','auth.e.confirm':'Primero confirma tu correo (te enviamos un enlace).',
       'auth.e.exists':'Ese correo ya tiene cuenta. Usa "Entrar".','auth.e.weak':'La contraseña es muy corta o débil (mínimo 8 caracteres).',
       'auth.e.rate':'Demasiados intentos. Espera unos minutos.','auth.e.mail':'Escribe un correo válido.','auth.e.generic':'No se pudo completar. Intenta de nuevo.',
@@ -524,7 +540,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'plan.demo.p':'to try it out','plan.month':'/ month',
       'plan.demo.l':['2 free songs to try','Full-length songs','Royalty-Free license (personal and social media use)','Personal library'],
       'plan.estudio.l':['20 songs per month','Royalty-Free license (personal and social media use)','All genres and voices','High-quality downloads'],
-      'plan.productor.l':['<b>60 songs per month</b> (triple the Studio plan)','Distribution license: publish on Spotify, Apple Music and more','All genres and voices','Priority support'],
+      'plan.productor.l':['<b>60 songs per month</b> (triple the Studio plan)','Royalty-Free license (personal and social media use)','All genres and voices','Priority support'],
       'plan.current':'Current plan','plan.free':'Free plan','plan.manage':'Manage subscription','pay.go':'Taking you to secure checkout…','pay.ok':'Payment received! Activating your plan…','pay.active':'Your plan is now active!','pay.cancel':'Payment canceled. You were not charged.','pay.err':'Could not open checkout. Please try again.','prof.choose':'Choose a plan to create more songs.','plan.popular':'MOST POPULAR','plan.pick':'Choose {p}','plan.already':'You are already on the Demo plan','plan.soon':'Payments for the {p} plan are coming soon.',
       'prof.h2':'My profile','prof.sub':'Your information and your activity in the studio.','prof.name':'Artist name','prof.name.ph':'Your name',
       'prof.email':'Email','prof.save':'Save','prof.songs':'SONGS CREATED','prof.avail':'SONGS AVAILABLE','prof.plan':'CURRENT PLAN',
@@ -535,6 +551,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'auth.enter':'Log in','auth.signup':'Sign up','auth.email':'Email','auth.pass':'Password','auth.newpass':'New password','auth.pass.ph':'At least 8 characters',
       'auth.forgot':'Forgot my password','auth.t.login':'Enter the studio','auth.t.signup':'Create your account','auth.t.rec':'New password',
       'auth.s.login':'Log in to create and save your songs.','auth.s.signup':'You start with 2 free songs.','auth.s.rec':'Type your new password.',
+      'auth.legal':'By logging in or signing up you agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Use</a> and the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.',
+      'foot.terms':'Terms of Use','foot.privacy':'Privacy Policy','foot.ai':'AI content','foot.note':'Brielle songs are created with artificial intelligence.',
       'auth.savepass':'Save password','auth.e.login':'Wrong email or password.','auth.e.confirm':'Please confirm your email first (we sent you a link).',
       'auth.e.exists':'That email already has an account. Use "Log in".','auth.e.weak':'The password is too short or weak (at least 8 characters).',
       'auth.e.rate':'Too many attempts. Please wait a few minutes.','auth.e.mail':'Enter a valid email.','auth.e.generic':'Something went wrong. Please try again.',

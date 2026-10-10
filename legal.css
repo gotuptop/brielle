@@ -1,0 +1,40 @@
+/* Brielle — estilos de las páginas legales (terms.html, privacy.html). */
+:root{
+  --bg:#0C0724; --panel:#160F3D; --ink:#05030F;
+  --text:#FFF4E6; --muted:#BDB4F5; --line:rgba(255,244,230,.18);
+  --pink:#FF2D95; --lime:#EEFF2E;
+  --display:'Bricolage Grotesque','Arial Black',system-ui,sans-serif; --body:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.65}
+a{color:var(--lime)}
+:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+button{font:inherit;cursor:pointer;background:none;color:inherit}
+
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,40px);background:var(--bg);border-bottom:2px solid var(--ink)}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.03em;color:var(--text);text-decoration:none}
+.logo .reel{width:24px;height:24px;border-radius:50%;background:var(--lime);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--pink);position:relative}
+.logo .reel::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--ink)}
+.top-right{display:flex;align-items:center;gap:10px}
+.pill{font-weight:700;font-size:14px;color:var(--text);border:2px solid var(--line);border-radius:999px;padding:6px 14px;text-decoration:none}
+.pill:hover{border-color:var(--lime);color:var(--lime)}
+
+main{max-width:760px;margin:0 auto;padding:44px clamp(16px,4vw,40px) 80px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,52px);line-height:1.05;letter-spacing:-.03em;text-wrap:balance}
+.updated{color:var(--muted);font-size:15px;margin:10px 0 28px}
+.summary{background:var(--panel);border:2px solid var(--ink);border-radius:20px;box-shadow:4px 4px 0 var(--ink);padding:20px 22px;margin-bottom:36px}
+.summary h2{margin:0 0 8px;font-size:20px}
+h2{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.02em;line-height:1.2;margin:38px 0 10px;scroll-margin-top:84px}
+h2 .n{color:var(--pink);margin-right:8px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px 22px}
+li{margin-bottom:6px}
+strong{color:var(--text)}
+.table{overflow-x:auto;margin:0 0 14px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px 9px 0;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+footer{border-top:1px solid var(--line);margin-top:48px;padding-top:20px;color:var(--muted);font-size:15px;display:flex;flex-wrap:wrap;gap:8px 18px}
+
+/* Solo se muestra el idioma activo. Sin JavaScript se ven los dos. */
+html[data-lang="en"] [data-l="es"], html[data-lang="es"] [data-l="en"]{display:none}
