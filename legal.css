@@ -15,7 +15,7 @@ button{font:inherit;cursor:pointer;background:none;color:inherit}
 .logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.03em;color:var(--text);text-decoration:none}
 .logo .reel{width:24px;height:24px;border-radius:50%;background:var(--lime);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--pink);position:relative}
 .logo .reel::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--ink)}
-.logo .mark{width:34px;height:34px;border-radius:50%;display:block;flex-shrink:0}
+.logo .mark{width:48px;height:48px;border-radius:50%;display:block;flex-shrink:0}
 .top-right{display:flex;align-items:center;gap:10px}
 .pill{font-weight:700;font-size:14px;color:var(--text);border:2px solid var(--line);border-radius:999px;padding:6px 14px;text-decoration:none}
 .pill:hover{border-color:var(--lime);color:var(--lime)}
