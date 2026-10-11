@@ -40,8 +40,8 @@ a{color:var(--amber-2)}
 .logo .reel{width:26px;height:26px;border-radius:50%;background:var(--amber-2);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--amber);position:relative}
 .logo .reel::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--ink)}
 .logo .mark{width:56px;height:56px;border-radius:50%;display:block;flex-shrink:0}
-.auth-mark{width:132px;height:132px;border-radius:50%;display:block;margin:0 auto 14px}
-@media (max-width:760px){.logo .mark{width:46px;height:46px}.auth-mark{width:108px;height:108px}}
+.auth-mark{width:210px;height:210px;display:block;margin:-6px auto 2px;border-radius:50%;-webkit-mask-image:radial-gradient(circle,#000 58%,transparent 71%);mask-image:radial-gradient(circle,#000 58%,transparent 71%)}
+@media (max-width:760px){.logo .mark{width:46px;height:46px}.auth-mark{width:176px;height:176px}}
 .nav{display:flex;gap:4px}
 .nav-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;color:var(--muted);font-weight:700;transition:background .15s,color .15s}
 .nav-btn svg{width:18px;height:18px;flex-shrink:0}
@@ -433,7 +433,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 <div class="modal" id="auth">
   <div class="studio">
     <div style="text-align:right;margin:-8px -8px 0 0"><button class="langbtn" data-lang-toggle aria-label="Language"></button></div>
-    <img class="auth-mark" src="/logo.png" alt="Brielle" width="132" height="132">
+    <img class="auth-mark" src="/logo-llama.png" alt="Brielle" width="210" height="210">
     <h2 id="authTitle">Entra al estudio</h2>
     <p class="sub" style="margin:0" id="authSub">Inicia sesión para crear y guardar tus canciones.</p>
     <div class="auth-tabs" id="authTabs"><button data-m="login" class="on" data-i18n="auth.enter">Entrar</button><button data-m="signup" data-i18n="auth.signup">Crear cuenta</button></div>
