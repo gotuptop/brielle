@@ -108,6 +108,8 @@ textarea{min-height:320px;resize:vertical;line-height:1.7}
 .row-between label{margin-bottom:8px}
 .counter{font-size:13px;color:var(--muted);font-weight:500}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip.more{border-style:dashed}
+.chip.sm{padding:7px 13px;font-size:14px}
 .chip{padding:9px 16px;border-radius:999px;border:2px solid var(--line);color:var(--muted);font-weight:600;font-size:15px;transition:background .12s,color .12s}
 .chip:hover{color:var(--text);border-color:var(--muted)}
 .chip.on{background:var(--amber-2);border-color:var(--ink);color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
@@ -301,6 +303,10 @@ input[type=range]{width:100%;accent-color:var(--amber)}
               <label data-i18n="genre.lbl">Género</label>
               <div class="chips" id="genres"></div>
             </div>
+            <div class="field" id="subField" hidden>
+              <label data-i18n="sub.lbl">Estilo</label>
+              <div class="chips" id="subs"></div>
+            </div>
             <div class="field">
               <label data-i18n="voice.lbl">Voz</label>
               <div class="chips" id="voices"></div>
@@ -448,6 +454,31 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const VOICES = ['Masculina','Femenina','Dúo','Coro','Instrumental'];
 
   // Cómo se describe cada opción a Soundverse (el modelo entiende mejor las etiquetas de estilo en inglés).
+  // Géneros que aparecen al tocar "Más géneros".
+  const MORE_GENRES = ['Merengue','Vallenato','Corrido','Norteño','Banda','Mariachi','Trap','Dembow','Tango','Flamenco','Reggae','Punta','Bossa Nova','Samba','Afrobeat','K-Pop','Indie','Metal','Punk','Soul','Funk','Blues','Disco','House','Lo-fi','Folk','Clásica','Infantil','Navideña'];
+  const MORE_PROMPT = {'Merengue':'merengue, fast tambora and güira, brass section','Vallenato':'Colombian vallenato, accordion, caja and guacharaca','Corrido':'Mexican corrido, storytelling, acoustic guitars and bass','Norteño':'norteño, accordion and bajo sexto','Banda':'Mexican banda sinaloense, brass band with tuba','Mariachi':'mariachi, trumpets, violins and guitarrón','Trap':'Latin trap, 808 bass and hi-hats','Dembow':'Dominican dembow, fast repetitive beat','Tango':'tango, bandoneon, violin and piano','Flamenco':'flamenco, Spanish guitar, palmas and cajón','Reggae':'reggae, offbeat guitar and deep bass','Punta':'Central American punta, fast drums and brass, festive','Bossa Nova':'bossa nova, soft nylon guitar','Samba':'samba, Brazilian percussion and cavaquinho','Afrobeat':'afrobeats, syncopated percussion and warm bass','K-Pop':'K-pop style dance pop, polished production','Indie':'indie pop rock, jangly guitars','Metal':'heavy metal, distorted guitars and double bass drums','Punk':'punk rock, fast power chords','Soul':'soul, warm organ and horns','Funk':'funk, slap bass and rhythm guitar','Blues':'blues, electric guitar and shuffle rhythm','Disco':'disco, four-on-the-floor, strings and funky bass','House':'house music, four-on-the-floor, piano chords','Lo-fi':'lo-fi chill beat, mellow and relaxed','Folk':'folk, acoustic guitar and harmonies','Clásica':'orchestral classical style, strings and piano','Infantil':"cheerful children's song, simple melody",'Navideña':'Christmas song, sleigh bells, warm and festive'};
+  // Estilos dentro de un género: [nombre en español, nombre en inglés, descripción para el generador].
+  const SUBSTYLES = {
+    'Cumbia':[['Colombiana','Colombian','traditional Colombian cumbia, accordion lead, guacharaca and tambora, Caribbean coast style'],['Sonidera','Sonidera','Mexican cumbia sonidera, synth melodies and güiro'],['Norteña','Norteña','cumbia norteña, accordion and bajo sexto'],['Villera','Villera','Argentine cumbia villera, keytar synths'],['Peruana','Peruvian','Peruvian cumbia chicha, psychedelic electric guitar'],['Salvadoreña','Salvadoran','Salvadoran cumbia, bright brass section and festive percussion']],
+    'Balada':[['Pop','Pop','pop ballad, piano and strings'],['Rock','Rock','power ballad, electric guitars and big drums'],['Piano','Piano','intimate piano ballad'],['Clásica','Classic','classic 80s Latin romantic ballad, lush strings']],
+    'Pop':[['Latino','Latin','Latin pop'],['Bailable','Dance','dance pop, bright synths'],['Synth-pop','Synth-pop','80s inspired synth-pop'],['Indie','Indie','indie pop, dreamy guitars'],['Pop rock','Pop rock','pop rock, guitars and catchy hooks']],
+    'Bachata':[['Tradicional','Traditional','traditional Dominican bachata, requinto guitar, bongos and güira'],['Urbana','Urban','modern urban bachata, R&B influence'],['Sensual','Sensual','slow sensual bachata']],
+    'Ranchera':[['Mariachi','Mariachi','ranchera with mariachi, trumpets, violins and guitarrón'],['Norteña','Norteña','ranchera norteña, accordion and bajo sexto'],['Con banda','With banda','ranchera with Mexican brass banda']],
+    'Reggaetón':[['Clásico','Classic','classic 2000s reggaeton, heavy dembow beat'],['Romántico','Romantic','romantic melodic reggaeton'],['Moderno','Modern','modern reggaeton pop, smooth production']],
+    'Salsa':[['Romántica','Romantic','salsa romántica, smooth horns and piano'],['Dura','Hard','salsa dura, powerful brass and fast percussion'],['Cubana','Cuban','Cuban son and timba, tres guitar and piano montuno']],
+    'Rock':[['Clásico','Classic','classic rock, electric guitar riffs'],['Alternativo','Alternative','alternative rock'],['Pop rock','Pop rock','pop rock, catchy hooks'],['Balada rock','Rock ballad','rock ballad, emotional guitars']],
+    'Gospel':[['Adoración','Worship','slow Christian worship, piano and pads'],['Alabanza','Praise','upbeat Christian praise, full band'],['Coro gospel','Gospel choir','gospel choir, organ and claps']],
+    'R&B':[['Contemporáneo','Contemporary','contemporary R&B, smooth and modern'],['Soul','Soul','neo soul, warm keys'],['Trap soul','Trap soul','trap soul, 808s and moody vocals']],
+    'Bolero':[['Trío','Trio','classic bolero, trio of guitars with requinto'],['Moderno','Modern','modern bolero, soft orchestration']],
+    'Acústico':[['Guitarra','Guitar','acoustic guitar song'],['Piano','Piano','acoustic piano song'],['Folk','Folk','acoustic folk, guitar and harmonies']],
+    'Country':[['Clásico','Classic','classic country, steel guitar and fiddle'],['Pop country','Pop country','modern pop country']],
+    'Hip-Hop':[['Boom bap','Boom bap','boom bap hip hop, sampled drums'],['Trap','Trap','trap, 808 bass and hi-hats'],['Rap latino','Latin rap','Latin rap'],['Lo-fi','Lo-fi','lo-fi hip hop, mellow']],
+    'EDM':[['House','House','house music, four-on-the-floor'],['Tropical','Tropical','tropical house, marimba and soft synths'],['Electro pop','Electro pop','electro pop, festival energy']],
+    'Jazz':[['Suave','Smooth','smooth jazz, saxophone and electric piano'],['Latino','Latin','Latin jazz, congas and piano'],['Swing','Swing','swing jazz, big band'],['Bossa','Bossa','bossa nova jazz, nylon guitar']],
+    'Corrido':[['Tradicional','Traditional','traditional Mexican corrido, accordion and bajo sexto'],['Tumbado','Tumbado','corrido tumbado, requinto guitars and tololoche bass']],
+    'Merengue':[['Clásico','Classic','classic merengue, brass and fast tambora'],['Típico','Típico','merengue típico, accordion, güira and tambora']],
+    'Reggae':[['Roots','Roots','roots reggae'],['Pop','Pop','reggae pop, sunny and light']],
+  };
   const GENRE_PROMPT = {'Balada':'Latin romantic ballad','Pop':'Latin pop','Bachata':'bachata','Cumbia':'cumbia','Ranchera':'ranchera, mariachi','Reggaetón':'reggaeton','Salsa':'salsa','Rock':'rock en español','Gospel':'Spanish Christian worship, gospel','R&B':'Latin R&B','Bolero':'bolero','Acústico':'acoustic guitar ballad','Country':'country','Hip-Hop':'hip hop, rap','EDM':'electronic dance music, EDM','Jazz':'jazz'};
   const MOOD_PROMPT = {'Romántico':'romantic','Alegre':'happy, upbeat','Melancólico':'melancholic','Inspirador':'inspiring','Espiritual':'spiritual','Enérgico':'energetic','Nostálgico':'nostalgic'};
   const VOICE_PROMPT = {'Masculina':'male vocals','Femenina':'female vocals','Dúo':'male and female duet vocals','Coro':'choir vocals','Instrumental':'instrumental, no vocals'};
@@ -467,6 +498,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'how.2t':'Elige tu sonido','how.2p':'Género, voz, ánimo e idioma de la canción.',
       'how.3t':'Escúchala y compártela','how.3p':'En minutos tienes la canción completa para bajar y subir a tus redes.',
       'create.h2':'Cabina de grabación','create.sub':'Escribe tu letra y configura el sonido. Brielle se encarga del resto.',
+      'sub.lbl':'Estilo','genre.more':'+ Más géneros','genre.less':'− Menos géneros',
       'style.lbl':'Detalles del estilo (opcional)','style.ph':'Ej: cumbia colombiana con acordeón, pegajosa y bailable','style.hint':'Describe instrumentos, subgénero o el sonido que buscas.',
       'title.lbl':'Título de la canción','title.ph':'Ej: Un nuevo comienzo','lyrics.lbl':'Letra',
       'lyrics.ph':'[Verso 1]\nEscribe aquí tu primer verso...\n\n[Coro]\nAquí va el coro...',
@@ -530,6 +562,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'how.2t':'Pick your sound','how.2p':'Genre, voice, mood and song language.',
       'how.3t':'Hear it and share it','how.3p':'In minutes you get the full song, ready to download and post.',
       'create.h2':'Recording booth','create.sub':'Write your lyrics and set the sound. Brielle takes care of the rest.',
+      'sub.lbl':'Style','genre.more':'+ More genres','genre.less':'− Fewer genres',
       'style.lbl':'Style details (optional)','style.ph':'E.g. Colombian cumbia with accordion, catchy and danceable','style.hint':'Describe instruments, subgenre or the sound you want.',
       'title.lbl':'Song title','title.ph':'E.g. A new beginning','lyrics.lbl':'Lyrics',
       'lyrics.ph':'[Verse 1]\nWrite your first verse here...\n\n[Chorus]\nThe chorus goes here...',
@@ -582,7 +615,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'lyr.btn':'Lyrics','lyr.copy':'Copy','lyr.dl':'Download .txt','lyr.close':'Close','lyr.copied':'Lyrics copied','lyr.none':'This song has no lyrics (instrumental).'
     }
   };
-  const GENRE_LABEL = {en:{'Balada':'Ballad','Reggaetón':'Reggaeton','Acústico':'Acoustic'}, es:{}};
+  const GENRE_LABEL = {en:{'Balada':'Ballad','Reggaetón':'Reggaeton','Acústico':'Acoustic','Clásica':'Classical','Infantil':'Kids','Navideña':'Christmas'}, es:{}};
   const VOICE_LABEL = {en:{'Masculina':'Male','Femenina':'Female','Dúo':'Duet','Coro':'Choir','Instrumental':'Instrumental'}, es:{}};
   const MOOD_LABEL  = {en:{'Romántico':'Romantic','Alegre':'Happy','Melancólico':'Melancholic','Inspirador':'Inspiring','Espiritual':'Spiritual','Enérgico':'Energetic','Nostálgico':'Nostalgic'}, es:{}};
   const MOODS = ['Romántico','Alegre','Melancólico','Inspirador','Espiritual','Enérgico','Nostálgico'];
@@ -599,7 +632,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
   
   let songs = [], credits = 0, plan = 'demo', profile = {name:'',email:''}, me = null;
-  const sel = {genre:'Balada', voice:'Masculina'};
+  const sel = {genre:'Balada', voice:'Masculina', sub:null};
+  let moreGenres = false;
 
   /* ---------- helpers ---------- */
   const hue = str => [...str].reduce((a,c)=>a+c.charCodeAt(0),0) % 360;
@@ -673,6 +707,29 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     });
   }
 
+  function renderGenres(){
+    const el=$('#genres'); el.innerHTML='';
+    const list = moreGenres || MORE_GENRES.includes(sel.genre) ? GENRES.concat(MORE_GENRES) : GENRES;
+    list.forEach(g=>{
+      const b=document.createElement('button'); b.type='button'; b.className='chip'+(sel.genre===g?' on':''); b.textContent=gl(g);
+      b.onclick=()=>{ sel.genre=g; sel.sub=null; renderGenres(); renderSubs(); };
+      el.appendChild(b);
+    });
+    const m=document.createElement('button'); m.type='button'; m.className='chip more'; m.textContent=t(list.length>GENRES.length?'genre.less':'genre.more');
+    m.onclick=()=>{ moreGenres = list.length<=GENRES.length; if(!moreGenres && MORE_GENRES.includes(sel.genre)){ sel.genre='Balada'; sel.sub=null; } renderGenres(); renderSubs(); };
+    el.appendChild(m);
+  }
+  function renderSubs(){
+    const subs=SUBSTYLES[sel.genre]||[], el=$('#subs'); el.innerHTML='';
+    $('#subField').hidden = !subs.length;
+    subs.forEach(x=>{
+      const b=document.createElement('button'); b.type='button'; b.className='chip sm'+(sel.sub===x[0]?' on':''); b.textContent=lang==='en'?x[1]:x[0];
+      b.onclick=()=>{ sel.sub = sel.sub===x[0] ? null : x[0]; renderSubs(); };
+      el.appendChild(b);
+    });
+  }
+  const genrePrompt = (g,sub) => { const x=(SUBSTYLES[g]||[]).find(v=>v[0]===sub); return x ? x[2] : (GENRE_PROMPT[g]||MORE_PROMPT[g]||g); };
+
   /* ---------- editor de letra ---------- */
   const ly=$('#lyrics');
   ly.addEventListener('input',()=>$('#count').textContent=`${ly.value.length} / 3000`);
@@ -687,7 +744,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 
   function buildPrompt(s){
     const extra=String(s.style||'').replace(/\s+/g,' ').trim().slice(0,200);
-    const parts=[extra, GENRE_PROMPT[s.genre]||s.genre, (MOOD_PROMPT[s.mood]||s.mood)+' mood', s.tempo+' BPM', VOICE_PROMPT[s.voice]||''];
+    const parts=[extra, genrePrompt(s.genre,s.sub), (MOOD_PROMPT[s.mood]||s.mood)+' mood', s.tempo+' BPM', VOICE_PROMPT[s.voice]||''];
     if(s.voice!=='Instrumental') parts.push(s.songLang==='en' ? 'sung in English' : s.songLang==='mix' ? 'sung in Spanglish, mixing Spanish and English' : 'sung in Spanish');
     parts.push('full-length song with intro, verses, chorus and outro');
     return parts.filter(Boolean).join(', ');
@@ -725,7 +782,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   async function record({title,lyrics}){
     recording=true; $('#recordBtn').disabled=true;
     const s={title, lyrics:sel.voice==='Instrumental'?'':lyrics, genre:sel.genre, voice:sel.voice,
-             mood:$('#mood').value, tempo:+$('#tempo').value, songLang:$('#songLang').value, style:$('#styleExtra').value};
+             mood:$('#mood').value, tempo:+$('#tempo').value, songLang:$('#songLang').value, style:$('#styleExtra').value, sub:sel.sub};
     modal.open(title);
     try{
       const r = await api('generate-song',{method:'POST', body:JSON.stringify({
@@ -1020,7 +1077,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     $$('[data-i18n-html]').forEach(el=>el.innerHTML=t(el.dataset.i18nHtml));
     $$('[data-i18n-ph]').forEach(el=>el.placeholder=t(el.dataset.i18nPh));
     $$('[data-lang-toggle]').forEach(b=>b.textContent = lang==='es' ? 'EN' : 'ES');
-    chips($('#genres'), GENRES, 'genre', gl);
+    renderGenres(); renderSubs();
     chips($('#voices'), VOICES, 'voice', vl);
     const mv=$('#mood').value; $('#mood').innerHTML=MOODS.map(m=>`<option value="${m}">${ml(m)}</option>`).join(''); if(mv) $('#mood').value=mv;
     $('#tools').innerHTML=TOOLS.map(k=>`<button data-tag="${t('tag.'+k)}">${t('tool.'+k)}</button>`).join('');
