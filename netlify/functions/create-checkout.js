@@ -39,7 +39,8 @@ exports.handler = async (event) => {
       mode: 'subscription',
       customer,
       client_reference_id: user.id,
-      allow_promotion_codes: 'true',
+      // Los códigos promocionales solo se aceptan en Estudio (un cupón del 100% no debe regalar Productor).
+      allow_promotion_codes: plan === 'estudio' ? 'true' : undefined,
       line_items: [{ quantity: 1, price_data: {
         currency: 'usd', unit_amount: p.amount, recurring: { interval: 'month' },
         product_data: { name: `Brielle ${p.name}`, description: `${p.credits} songs / canciones por mes` },
