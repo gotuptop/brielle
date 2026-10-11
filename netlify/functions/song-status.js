@@ -36,6 +36,21 @@ async function debugMode(q) {
   return json(200, { id, status: task.status, workingRoute: download && download.via, download, generation: slim });
 }
 
+// Reconoce el formato de audio por sus primeros bytes; si no los reconoce, usa el tipo declarado.
+function audioKind(buf, declared) {
+  const head = buf.subarray(0, 12), tag = head.toString('latin1');
+  if (tag.startsWith('fLaC')) return { ext: 'flac', type: 'audio/flac' };
+  if (tag.startsWith('RIFF') && tag.slice(8, 12) === 'WAVE') return { ext: 'wav', type: 'audio/wav' };
+  if (tag.startsWith('OggS')) return { ext: 'ogg', type: 'audio/ogg' };
+  if (tag.slice(4, 8) === 'ftyp') return { ext: 'm4a', type: 'audio/mp4' };
+  if (tag.startsWith('ID3') || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0)) return { ext: 'mp3', type: 'audio/mpeg' };
+  if (/flac/.test(declared)) return { ext: 'flac', type: 'audio/flac' };
+  if (/wav/.test(declared)) return { ext: 'wav', type: 'audio/wav' };
+  if (/ogg/.test(declared)) return { ext: 'ogg', type: 'audio/ogg' };
+  if (/mp4|m4a|aac/.test(declared)) return { ext: 'm4a', type: 'audio/mp4' };
+  return { ext: 'mp3', type: 'audio/mpeg' };
+}
+
 exports.handler = async (event) => {
   const q = event.queryStringParameters || {};
   if (!process.env.SOUNDVERSE_API_KEY) return json(500, { error: 'Falta SOUNDVERSE_API_KEY en Netlify' });
@@ -77,11 +92,12 @@ exports.handler = async (event) => {
 
     const audioRes = await fetch(d.url);
     if (!audioRes.ok) return json(200, { status: 'processing' });
-    const type = (audioRes.headers.get('content-type') || 'audio/mpeg').split(';')[0];
-    const ext = /wav/.test(type) ? 'wav' : /ogg/.test(type) ? 'ogg' : /mp4|m4a|aac/.test(type) ? 'm4a' : 'mp3';
     const buf = Buffer.from(await audioRes.arrayBuffer());
+    // El formato se decide por el contenido real del archivo, no por lo que diga el servidor de origen
+    // (Soundverse entrega FLAC y antes se guardaba con extensión .mp3).
+    const { ext, type } = audioKind(buf, (audioRes.headers.get('content-type') || '').split(';')[0]);
     const path = `${user.id}/${song.id}.${ext}`;
-    await sb.uploadAudio(path, buf, type.startsWith('audio/') ? type : 'audio/mpeg');
+    await sb.uploadAudio(path, buf, type);
 
     let meta = {}; try { meta = JSON.parse(asset.metadata_json || '{}'); } catch {}
     const duration = meta.duration_ms ? meta.duration_ms / 1000 : (asset.duration || asset.duration_seconds || null);
@@ -92,3 +108,5 @@ exports.handler = async (event) => {
     return json(200, { status: 'processing', note: String(e.message || e).slice(0, 200) });
   }
 };
+
+exports.audioKind = audioKind;

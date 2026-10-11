@@ -849,9 +849,23 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       else toast(t('toast.still'));
     }catch(e){ toast(e.message); }
   }
+  // Las canciones antiguas se guardaron como .mp3 aunque por dentro son FLAC: se mira el inicio del archivo.
+  async function realExt(s, ext){
+    try{
+      const {data} = await sb.storage.from('songs').createSignedUrl(s.audio, 120);
+      const r = await fetch(data.signedUrl, {headers:{Range:'bytes=0-11'}});
+      const b = new Uint8Array(await r.arrayBuffer()), tag = String.fromCharCode(...b.slice(0,12));
+      if(tag.startsWith('fLaC')) return 'flac';
+      if(tag.startsWith('RIFF')) return 'wav';
+      if(tag.startsWith('OggS')) return 'ogg';
+      if(tag.slice(4,8)==='ftyp') return 'm4a';
+    }catch(e){}
+    return ext;
+  }
   async function freshUrl(s, download){
     if(!s.audio) throw new Error(t('toast.noaudio'));
-    const ext = (s.audio.match(/\.(\w+)$/)||[])[1]||'mp3';
+    let ext = (s.audio.match(/\.(\w+)$/)||[])[1]||'mp3';
+    if(download && ext==='mp3') ext = await realExt(s, ext);
     const {data,error} = await sb.storage.from('songs').createSignedUrl(s.audio, 3600, download?{download:`${s.title}.${ext}`}:undefined);
     if(error||!data) throw new Error(t('toast.audioerr'));
     return data.signedUrl;
@@ -889,7 +903,10 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     if(act==='play'){ if(current&&current.id===s.id) toggle(); else load(s,true); }
     if(act==='check') checkNow(s);
     if(act==='lyr'){ lyrSong=s; $('#lyrTitle').textContent=s.title; $('#lyrText').textContent=s.lyrics||t('lyr.none'); $('#lyrModal').classList.add('show'); }
-    if(act==='dl'){ try{ toast(t('toast.dl')); window.open(await freshUrl(s,true),'_blank'); }catch(err){ toast(err.message); } }
+    if(act==='dl'){ try{ toast(t('toast.dl'));
+        // Sin window.open: el iPhone bloquea las ventanas que se abren después de una espera.
+        const a=document.createElement('a'); a.href=await freshUrl(s,true); a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove();
+      }catch(err){ toast(err.message); } }
     if(act==='del' && s.status==='pending'){ toast(t('toast.waitdel')); return; }
     if(act==='del' && confirm(t('confirm.del',{t:s.title}))){
       if(s.audio) await sb.storage.from('songs').remove([s.audio]);
