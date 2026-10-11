@@ -314,6 +314,11 @@ input[type=range]{width:100%;accent-color:var(--amber)}
               <select id="mood"></select>
             </div>
             <div class="field">
+              <div class="row-between"><label for="styleExtra" data-i18n="style.lbl">Detalles del estilo (opcional)</label><span class="counter" id="styleCount">0 / 200</span></div>
+              <input class="input" id="styleExtra" maxlength="200" placeholder="Ej: cumbia colombiana con acordeón, pegajosa y bailable" data-i18n-ph="style.ph">
+              <p class="hint" data-i18n="style.hint">Describe instrumentos, subgénero o el sonido que buscas.</p>
+            </div>
+            <div class="field">
               <div class="row-between"><label for="tempo">Tempo</label><span class="counter" id="tempoVal">95 BPM</span></div>
               <input type="range" id="tempo" min="60" max="160" value="95">
             </div>
@@ -462,6 +467,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'how.2t':'Elige tu sonido','how.2p':'Género, voz, ánimo e idioma de la canción.',
       'how.3t':'Escúchala y compártela','how.3p':'En minutos tienes la canción completa para bajar y subir a tus redes.',
       'create.h2':'Cabina de grabación','create.sub':'Escribe tu letra y configura el sonido. Brielle se encarga del resto.',
+      'style.lbl':'Detalles del estilo (opcional)','style.ph':'Ej: cumbia colombiana con acordeón, pegajosa y bailable','style.hint':'Describe instrumentos, subgénero o el sonido que buscas.',
       'title.lbl':'Título de la canción','title.ph':'Ej: Un nuevo comienzo','lyrics.lbl':'Letra',
       'lyrics.ph':'[Verso 1]\nEscribe aquí tu primer verso...\n\n[Coro]\nAquí va el coro...',
       'tool.intro':'+ Intro','tool.verse':'+ Verso','tool.pre':'+ Pre-coro','tool.chorus':'+ Coro','tool.bridge':'+ Puente','tool.outro':'+ Final',
@@ -524,6 +530,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'how.2t':'Pick your sound','how.2p':'Genre, voice, mood and song language.',
       'how.3t':'Hear it and share it','how.3p':'In minutes you get the full song, ready to download and post.',
       'create.h2':'Recording booth','create.sub':'Write your lyrics and set the sound. Brielle takes care of the rest.',
+      'style.lbl':'Style details (optional)','style.ph':'E.g. Colombian cumbia with accordion, catchy and danceable','style.hint':'Describe instruments, subgenre or the sound you want.',
       'title.lbl':'Song title','title.ph':'E.g. A new beginning','lyrics.lbl':'Lyrics',
       'lyrics.ph':'[Verse 1]\nWrite your first verse here...\n\n[Chorus]\nThe chorus goes here...',
       'tool.intro':'+ Intro','tool.verse':'+ Verse','tool.pre':'+ Pre-chorus','tool.chorus':'+ Chorus','tool.bridge':'+ Bridge','tool.outro':'+ Outro',
@@ -676,9 +683,11 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     ly.dispatchEvent(new Event('input'));
   });
   $('#tempo').oninput=e=>$('#tempoVal').textContent=e.target.value+' BPM';
+  $('#styleExtra').addEventListener('input',e=>$('#styleCount').textContent=`${e.target.value.length} / 200`);
 
   function buildPrompt(s){
-    const parts=[GENRE_PROMPT[s.genre]||s.genre, (MOOD_PROMPT[s.mood]||s.mood)+' mood', s.tempo+' BPM', VOICE_PROMPT[s.voice]||''];
+    const extra=String(s.style||'').replace(/\s+/g,' ').trim().slice(0,200);
+    const parts=[extra, GENRE_PROMPT[s.genre]||s.genre, (MOOD_PROMPT[s.mood]||s.mood)+' mood', s.tempo+' BPM', VOICE_PROMPT[s.voice]||''];
     if(s.voice!=='Instrumental') parts.push(s.songLang==='en' ? 'sung in English' : s.songLang==='mix' ? 'sung in Spanglish, mixing Spanish and English' : 'sung in Spanish');
     parts.push('full-length song with intro, verses, chorus and outro');
     return parts.filter(Boolean).join(', ');
@@ -716,7 +725,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   async function record({title,lyrics}){
     recording=true; $('#recordBtn').disabled=true;
     const s={title, lyrics:sel.voice==='Instrumental'?'':lyrics, genre:sel.genre, voice:sel.voice,
-             mood:$('#mood').value, tempo:+$('#tempo').value, songLang:$('#songLang').value};
+             mood:$('#mood').value, tempo:+$('#tempo').value, songLang:$('#songLang').value, style:$('#styleExtra').value};
     modal.open(title);
     try{
       const r = await api('generate-song',{method:'POST', body:JSON.stringify({
