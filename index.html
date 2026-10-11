@@ -600,7 +600,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const fmt = t => (t!=null && isFinite(t)) ? `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}` : '—';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
-  function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),3200); }
+  function toast(msg, ms){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),ms||3200); }
   const polling = new Set();
   // Convierte una fila de la base de datos al formato que usa la interfaz.
   const norm = r => ({id:r.id, title:r.title, genre:r.genre||'', voice:r.voice||'', mood:r.mood||'', lyrics:r.lyrics||'',
@@ -636,7 +636,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     }catch(e){ throw new Error(t('err.offline')); }
     const data = await res.json().catch(()=>({}));
     if(res.status===401){ showAuth('login'); const e=new Error(t('err.expired')); e.auth=true; throw e; }
-    if(!res.ok){ const e=new Error(friendly(data)); e.code=data.error; throw e; }
+    if(!res.ok){ const e=new Error(friendly(data)); e.code=data.error; e.detail=String(data.message||data.error||('HTTP '+res.status)).slice(0,160); throw e; }
     return data;
   }
 
@@ -888,7 +888,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   async function openUrl(path, body){
     toast(t('pay.go'));
     try{ const r = await api(path,{method:'POST', body:JSON.stringify(body||{})}); if(r.url) location.href = r.url; else throw new Error(); }
-    catch(e){ if(e.auth) return; toast(e.code==='AlreadySubscribed' ? t('plan.manage') : t('pay.err')); if(e.code==='AlreadySubscribed') loadProfile().then(()=>{ renderPlans(); renderProfile(); }); }
+    catch(e){ if(e.auth) return; if(e.code==='AlreadySubscribed') toast(t('plan.manage')); else { console.error('Brielle pago:', e.detail||e.message); toast(t('pay.err') + (e.detail ? ' — ' + e.detail : ''), e.detail ? 15000 : 0); } if(e.code==='AlreadySubscribed') loadProfile().then(()=>{ renderPlans(); renderProfile(); }); }
   }
   $('#plansGrid').addEventListener('click',e=>{
     const b=e.target.closest('[data-plan]'); if(!b) return;
