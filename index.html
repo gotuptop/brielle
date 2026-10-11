@@ -39,6 +39,7 @@ a{color:var(--amber-2)}
 .logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.03em;color:var(--text)}
 .logo .reel{width:26px;height:26px;border-radius:50%;background:var(--amber-2);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--amber);position:relative}
 .logo .reel::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--ink)}
+.logo .mark{width:38px;height:38px;border-radius:50%;display:block;flex-shrink:0}
 .nav{display:flex;gap:4px}
 .nav-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;color:var(--muted);font-weight:700;transition:background .15s,color .15s}
 .nav-btn svg{width:18px;height:18px;flex-shrink:0}
@@ -242,7 +243,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 
 <div class="app">
   <header class="top">
-    <div class="logo"><span class="reel"></span>Brielle</div>
+    <div class="logo"><img class="mark" src="/logo.png" alt="" width="38" height="38">Brielle</div>
     <nav class="nav" aria-label="Brielle">
       <button class="nav-btn" data-go="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span data-i18n="nav.home">Inicio</span></button>
       <button class="nav-btn" data-go="crear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg><span data-i18n="nav.create">Crear</span></button>
