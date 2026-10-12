@@ -134,7 +134,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 .song{background:var(--panel);border:2px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:var(--shadow);transition:transform .1s,box-shadow .1s}
 .song:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
 .cover{aspect-ratio:1;position:relative;display:grid;place-items:center;border-bottom:2px solid var(--ink)}
-.cover .disc{width:60%;aspect-ratio:1;border-radius:50%;background:repeating-radial-gradient(var(--ink) 0 2px,#1a1050 2px 4px);display:grid;place-items:center;box-shadow:5px 5px 0 rgba(5,3,15,.45)}
+.cover .art{position:absolute;inset:0;width:100%;height:100%;display:block}
+.now .mini{overflow:hidden}
+.now .mini .art{width:100%;height:100%;display:block}
+.cover .disc{position:absolute;left:12px;bottom:12px;width:46px;aspect-ratio:1;border-radius:50%;background:repeating-radial-gradient(var(--ink) 0 2px,#1a1050 2px 4px);display:none;place-items:center;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.song.playing .disc,.song.pending .disc{display:grid}
+.song.pending .art{filter:saturate(.35) brightness(.7)}
 .cover .disc i{width:34%;aspect-ratio:1;border-radius:50%;display:block;border:2px solid var(--ink)}
 .song.playing .disc{animation:spin 3s linear infinite}
 .cover .play{position:absolute;right:12px;bottom:12px;width:46px;height:46px;border-radius:50%;background:var(--lagoon);color:var(--ink);display:grid;place-items:center;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);font-weight:800}
@@ -873,6 +878,102 @@ input[type=range]{width:100%;accent-color:var(--amber)}
 
   /* ---------- biblioteca ---------- */
   $('#search').oninput=renderLibrary;
+  /* ---------- portadas: arte generado a partir del título, género y ambiente ---------- */
+  // Familias de género: cada una tiene su propio motivo gráfico.
+  const ART_FAMILY = {
+    tropical:['Cumbia','Salsa','Merengue','Bachata','Vallenato','Punta','Samba'],
+    urbano:['Reggaetón','Trap','Hip-Hop','Dembow','R&B'],
+    romantico:['Balada','Bolero','Pop','Soul','K-Pop'],
+    regional:['Ranchera','Mariachi','Corrido','Norteño','Banda','Country','Folk'],
+    rock:['Rock','Metal','Punk','Indie','Blues'],
+    electronico:['EDM','House','Disco','Lo-fi','Afrobeat','Funk'],
+    espiritual:['Gospel','Clásica','Navideña'],
+    acustico:['Acústico','Jazz','Bossa Nova','Tango','Flamenco','Reggae','Infantil'],
+  };
+  // Paleta según el ambiente: [fondo 1, fondo 2, acento, acento 2].
+  const ART_PALETTE = {
+    'Romántico':['#FF2D95','#5B1691','#FFD166','#FF8FC7'],
+    'Alegre':['#FF9A1F','#E8336D','#EEFF2E','#00F5E0'],
+    'Melancólico':['#2447A8','#0C0724','#00F5E0','#8FA8FF'],
+    'Inspirador':['#00A99D','#12306B','#EEFF2E','#7CF5E9'],
+    'Espiritual':['#7B3FE4','#190A4D','#FFD166','#C9A8FF'],
+    'Enérgico':['#F0312F','#4A0A66','#EEFF2E','#FF8A3D'],
+    'Nostálgico':['#E07A3F','#4E2318','#FFE3A3','#F2A65A'],
+  };
+  const artSeed = str => { let h=2166136261; for(const c of String(str)) { h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; };
+  const artRand = seed => () => { seed=(seed+0x6D2B79F5)|0; let x=Math.imul(seed^(seed>>>15),1|seed); x=(x+Math.imul(x^(x>>>7),61|x))^x; return ((x^(x>>>14))>>>0)/4294967296; };
+  const artFamily = g => Object.keys(ART_FAMILY).find(k=>ART_FAMILY[k].includes(g)) || 'romantico';
+  const ART_MOTIF = {
+    tropical(r,a,b){ // sol con rayos y ondas
+      const cx=250+r()*90, cy=250+r()*70, R=62+r()*26, n=12+Math.floor(r()*6); let o='';
+      for(let i=0;i<n;i++){ const t=i/n*Math.PI*2, x1=cx+Math.cos(t)*(R+14), y1=cy+Math.sin(t)*(R+14), x2=cx+Math.cos(t)*(R+52+((i%2)*22)), y2=cy+Math.sin(t)*(R+52+((i%2)*22)); o+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${a}" stroke-width="9" stroke-linecap="round"/>`; }
+      o+=`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${R.toFixed(1)}" fill="${a}" stroke="#05030F" stroke-width="5"/>`;
+      for(let k=0;k<3;k++){ const y=330+k*24; let d=`M-10 ${y}`; for(let x=0;x<=420;x+=35) d+=` q17.5 ${k%2?-16:16} 35 0`; o+=`<path d="${d}" fill="none" stroke="${b}" stroke-width="7" stroke-linecap="round" opacity=".9"/>`; }
+      return o; },
+    urbano(r,a,b){ // barras diagonales y círculo
+      let o=`<g transform="rotate(${(-24+r()*10).toFixed(1)} 200 200)">`; const n=5+Math.floor(r()*3);
+      for(let i=0;i<n;i++){ const y=210+i*44, w=180+r()*260; o+=`<rect x="${(40+r()*120).toFixed(0)}" y="${y}" width="${w.toFixed(0)}" height="24" rx="12" fill="${i%2?b:a}" stroke="#05030F" stroke-width="4"/>`; }
+      o+='</g>'; o+=`<circle cx="${(52+r()*40).toFixed(0)}" cy="${(318+r()*36).toFixed(0)}" r="${(26+r()*12).toFixed(0)}" fill="none" stroke="${a}" stroke-width="9"/>`;
+      return o; },
+    romantico(r,a,b){ // círculos que se cruzan y destellos
+      let o=''; const n=3;
+      for(let i=0;i<n;i++){ o+=`<circle cx="${(210+r()*130).toFixed(0)}" cy="${(250+r()*90).toFixed(0)}" r="${(60+r()*46).toFixed(0)}" fill="${i%2?b:a}" opacity=".62" stroke="#05030F" stroke-width="4"/>`; }
+      for(let i=0;i<6;i++){ const x=40+r()*320, y=200+r()*170, s=8+r()*10; o+=`<path d="M${x} ${y-s} L${x+s*.3} ${y-s*.3} L${x+s} ${y} L${x+s*.3} ${y+s*.3} L${x} ${y+s} L${x-s*.3} ${y+s*.3} L${x-s} ${y} L${x-s*.3} ${y-s*.3}Z" fill="#FFF4E6"/>`; }
+      return o; },
+    regional(r,a,b){ // atardecer, sol en el horizonte y cerros
+      const h=268+r()*24; let o=`<circle cx="${(230+r()*90).toFixed(0)}" cy="${h.toFixed(0)}" r="${(70+r()*24).toFixed(0)}" fill="${a}" stroke="#05030F" stroke-width="5"/>`;
+      let d=`M-10 400 L-10 ${h+30}`; let x=-10; while(x<410){ const w=60+r()*70, p=28+r()*56; d+=` L${(x+w/2).toFixed(0)} ${(h+30-p).toFixed(0)} L${(x+w).toFixed(0)} ${(h+30).toFixed(0)}`; x+=w; } d+=' L410 400Z';
+      o+=`<path d="${d}" fill="#05030F" opacity=".82"/>`;
+      for(let k=0;k<3;k++) o+=`<rect x="-10" y="${(h+46+k*22).toFixed(0)}" width="420" height="8" fill="${b}" opacity="${(.85-k*.2).toFixed(2)}"/>`;
+      return o; },
+    rock(r,a,b){ // rayo y esquirlas
+      const x=230+r()*70; let o=`<path d="M${x} 196 L${x-62} 302 L${x-14} 302 L${x-42} 400 L${x+60} 270 L${x+10} 270 L${x+48} 196Z" fill="${a}" stroke="#05030F" stroke-width="6" stroke-linejoin="round"/>`;
+      for(let i=0;i<6;i++){ const px=20+r()*360, py=250+r()*130, s=12+r()*16, t=r()*360; o+=`<path d="M0 ${-s} L${s*.8} ${s*.7} L${-s*.8} ${s*.7}Z" transform="translate(${px.toFixed(0)} ${py.toFixed(0)}) rotate(${t.toFixed(0)})" fill="${b}" stroke="#05030F" stroke-width="3"/>`; }
+      return o; },
+    electronico(r,a,b){ // ecualizador y anillos
+      let o=''; const n=13;
+      for(let i=0;i<n;i++){ const hh=36+r()*110, x=18+i*29; o+=`<rect x="${x}" y="${(388-hh).toFixed(0)}" width="19" height="${hh.toFixed(0)}" rx="9.5" fill="${i%3===0?b:a}" stroke="#05030F" stroke-width="3.5"/>`; }
+      const cx=338+r()*30, cy=60+r()*20; for(let k=0;k<3;k++) o+=`<circle cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" r="${9+k*10}" fill="none" stroke="${k%2?a:b}" stroke-width="5" opacity="${(.9-k*.2).toFixed(2)}"/>`;
+      return o; },
+    espiritual(r,a,b){ // rayos de luz
+      let o=''; const n=11, cx=200+(r()-.5)*80;
+      for(let i=0;i<n;i++){ const t=-Math.PI+ (i+.5)/n*Math.PI, w=.07; o+=`<path d="M${cx} 410 L${(cx+Math.cos(t-w)*520).toFixed(0)} ${(410+Math.sin(t-w)*520).toFixed(0)} L${(cx+Math.cos(t+w)*520).toFixed(0)} ${(410+Math.sin(t+w)*520).toFixed(0)}Z" fill="${i%2?b:a}" opacity=".5"/>`; }
+      o+=`<circle cx="${cx}" cy="398" r="${(74+r()*26).toFixed(0)}" fill="${a}" stroke="#05030F" stroke-width="5"/>`;
+      return o; },
+    acustico(r,a,b){ // cuerdas y boca de guitarra
+      let o=`<circle cx="${(260+r()*70).toFixed(0)}" cy="${(280+r()*50).toFixed(0)}" r="${(66+r()*22).toFixed(0)}" fill="#05030F" opacity=".8" stroke="${a}" stroke-width="9"/>`;
+      for(let k=0;k<6;k++){ const y=224+k*26, amp=5+r()*12; let d=`M-10 ${y}`; for(let x=0;x<=420;x+=60) d+=` q30 ${(k%2?-amp:amp).toFixed(1)} 60 0`; o+=`<path d="${d}" fill="none" stroke="${k%2?b:'#FFF4E6'}" stroke-width="${(2.5+k*.5).toFixed(1)}" stroke-linecap="round"/>`; }
+      return o; },
+  };
+  // Parte el título en renglones cortos para que quepa grande.
+  function artLines(title){
+    const words=String(title||'').trim().split(/\s+/).filter(Boolean); const lines=[]; let cur='';
+    const max = words.join(' ').length>22 ? 13 : 10;
+    for(const w of words){ if(cur && (cur+' '+w).length>max){ lines.push(cur); cur=w; } else cur=cur?cur+' '+w:w; }
+    if(cur) lines.push(cur);
+    if(lines.length>4){ const keep=lines.slice(0,4); keep[3]=keep[3].replace(/.{0,2}$/,'…'); return keep; }
+    return lines.length?lines:['♪'];
+  }
+  function coverSvg(s, mini){
+    const seed=artSeed((s.id||'')+'|'+(s.title||'')), r=artRand(seed), uid='a'+seed.toString(36);
+    const pal=ART_PALETTE[s.mood] || Object.values(ART_PALETTE)[seed%7];
+    const [c1,c2,a,b]=pal, ang=Math.floor(r()*4)*45+20;
+    const motif=ART_MOTIF[artFamily(s.genre)](r,a,b);
+    let text='';
+    if(!mini){
+      const lines=artLines(s.title), longest=Math.max(...lines.map(l=>l.length)), fs=Math.max(30,Math.min(68,Math.floor(344/(longest*.6))));
+      const y0=96+fs*.72;
+      const tspans=dx=>lines.map((l,i)=>`<tspan x="${28+dx}" y="${(y0+i*fs*1.02+dx).toFixed(1)}">${esc(l)}</tspan>`).join('');
+      text=`<rect x="24" y="24" width="${Math.max(84,gl(s.genre).length*11+30)}" height="32" rx="16" fill="#05030F"/>
+        <text x="39" y="45.5" font-family="'DM Sans',system-ui,sans-serif" font-weight="700" font-size="15" letter-spacing="1.2" fill="${a}">${esc(gl(s.genre).toUpperCase())}</text>
+        <g font-family="'Bricolage Grotesque','Arial Black',system-ui,sans-serif" font-weight="800" font-size="${fs}" letter-spacing="-1.5">
+          <text fill="#05030F">${tspans(4)}</text><text fill="#FFF4E6">${tspans(0)}</text></g>`;
+    }
+    return `<svg class="art" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(s.title||'')}" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="${uid}" gradientTransform="rotate(${ang} .5 .5)"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
+      <rect width="400" height="400" fill="url(#${uid})"/>${motif}${text}</svg>`;
+  }
+
   function renderLibrary(){
     const q=$('#search').value.toLowerCase();
     const list=songs.filter(s=>(s.title+s.genre+s.mood).toLowerCase().includes(q));
@@ -887,8 +988,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       else { btn=`<button class="play" data-act="check" aria-label="${t('lib.check')}" title="${t('lib.check')}">⟳</button>`; meta=`<span class="badge">${t('lib.rec')}</span>`; }
       return `
       <div class="song ${isCur?'playing':''} ${s.status==='pending'?'pending':''}" data-id="${s.id}">
-        <div class="cover" style="background:${coverBg(s)}">
-          <div class="disc"><i style="background:${coverBg(s)}"></i></div>${btn}
+        <div class="cover">
+          ${coverSvg(s)}<div class="disc"><i style="background:${coverBg(s)}"></i></div>${btn}
         </div>
         <div class="meta">
           <div class="t">${esc(s.title)}</div>
@@ -931,12 +1032,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   const audio=new Audio(); audio.preload='auto';
   let current=null, playing=false, meterTimer=null;
   const meters=$('#meters'); for(let i=0;i<14;i++) meters.appendChild(document.createElement('i'));
-  function resetPlayer(){ audio.removeAttribute('src'); audio.load(); $('#pTitle').textContent=t('player.none'); $('#pSub').textContent=t('player.pick'); $('#pCover').style.background='var(--panel-2)'; $('#tot').textContent='0:00'; $('#cur').textContent='0:00'; $('#fill').style.width='0'; }
+  function resetPlayer(){ audio.removeAttribute('src'); audio.load(); $('#pTitle').textContent=t('player.none'); $('#pSub').textContent=t('player.pick'); $('#pCover').innerHTML=''; $('#tot').textContent='0:00'; $('#cur').textContent='0:00'; $('#fill').style.width='0'; }
   async function load(s, autoplay, url){
     if(s.status!=='ready'){ toast(t('toast.notready')); return; }
     current=s;
     $('#pTitle').textContent=s.title; $('#pSub').textContent=`${gl(s.genre)} · ${vl(s.voice)}`;
-    $('#pCover').style.background=coverBg(s); $('#tot').textContent=fmt(s.dur); $('#cur').textContent='0:00'; $('#fill').style.width='0';
+    $('#pCover').innerHTML=coverSvg(s,true); $('#tot').textContent=fmt(s.dur); $('#cur').textContent='0:00'; $('#fill').style.width='0';
     try{
       $('#pSub').textContent=t('player.loading');
       audio.src = url || await freshUrl(s);
