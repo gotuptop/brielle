@@ -365,7 +365,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
               </div>
               <p class="hint" data-i18n="ref.hint">Brielle imita el ritmo, el estilo y el tipo de voz de ese audio. Usa un fragmento de unos 30 segundos (máx. 15 MB).</p>
               <p class="hint ref-lock" id="refLock" data-i18n="ref.lock">Disponible en los planes Estudio y Productor.</p>
-              <label class="check" id="refRights" hidden><input type="checkbox" id="rightsOk"> <span data-i18n="ref.rights">Confirmo que tengo los derechos de este audio y que soy el único responsable de su uso. Brielle solo lo usa para crear mi canción y lo borra al terminar.</span></label>
+              <label class="check" id="refRights" hidden><input type="checkbox" id="rightsOk"> <span data-i18n-html="ref.rights">Confirmo que soy el autor de este audio o tengo permiso por escrito de su dueño.</span></label>
             </div>
             <div class="field" style="margin-bottom:0">
               <p class="hint" style="margin-top:0" data-i18n="create.hint">Brielle graba canciones completas, con intro, versos, coro y final. Usa las etiquetas [Verso], [Coro], etc. en tu letra para guiar la estructura.</p>
@@ -549,9 +549,9 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'ref.lbl':'Canción de referencia (opcional)','ref.pick':'Subir MP3 / M4A','ref.none':'Ningún archivo',
       'ref.hint':'Brielle imita el ritmo, el estilo y el tipo de voz de ese audio. Usa un fragmento de unos 30 segundos (máx. 15 MB).',
       'ref.lock':'Disponible en los planes Estudio y Productor.',
-      'ref.rights':'Confirmo que tengo los derechos de este audio y que soy el único responsable de su uso. Brielle solo lo usa para crear mi canción y lo borra al terminar.',
+      'ref.rights':'Confirmo que soy el autor de este audio o que tengo permiso por escrito de todos sus dueños; que <b>no</b> es una canción comercial de otro artista ni un audio bajado de YouTube, Spotify u otra plataforma; y que soy el único responsable legal de su uso. Acepto la sección <a href="/terms.html#refs" target="_blank" rel="noopener">Audio de referencia y derechos de autor</a> de los Términos. Brielle guarda constancia de esta aceptación y borra el audio al terminar.',
       'ref.type':'Solo se aceptan archivos MP3 o M4A.','ref.big':'La referencia no puede pasar de 15 MB.','ref.paid':'Las referencias están disponibles en los planes Estudio y Productor.',
-      'ref.needrights':'Marca la casilla de derechos para usar la referencia.','ref.uperr':'No se pudo subir la referencia. Intenta de nuevo.','ref.uploading':'Subiendo referencia…',
+      'ref.needrights':'Marca la casilla de derechos para usar la referencia.','ref.blocked':'Tu cuenta no puede usar canciones de referencia. Escríbenos a soporte si crees que es un error.','ref.uperr':'No se pudo subir la referencia. Intenta de nuevo.','ref.uploading':'Subiendo referencia…',
       'lib.h2':'Mi biblioteca','lib.search':'Buscar canción...',
       'lib.count1':'1 canción','lib.countN':'{n} canciones','lib.none':'No se encontraron canciones.',
       'lib.empty':'Tu biblioteca está vacía.','lib.first':'Crear mi primera canción',
@@ -619,9 +619,9 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'ref.lbl':'Reference song (optional)','ref.pick':'Upload MP3 / M4A','ref.none':'No file',
       'ref.hint':'Brielle mimics the rhythm, style and voice type of that audio. Use a clip of about 30 seconds (max 15 MB).',
       'ref.lock':'Available on the Estudio and Productor plans.',
-      'ref.rights':'I confirm I own the rights to this audio and I am solely responsible for its use. Brielle only uses it to create my song and deletes it when done.',
+      'ref.rights':'I confirm I created this audio or have written permission from all of its owners; that it is <b>not</b> a commercial song by another artist or audio downloaded from YouTube, Spotify or any other platform; and that I am solely legally responsible for its use. I accept the <a href="/terms.html#refs" target="_blank" rel="noopener">Reference audio and copyright</a> section of the Terms. Brielle keeps a record of this confirmation and deletes the audio when done.',
       'ref.type':'Only MP3 or M4A files are accepted.','ref.big':'The reference cannot exceed 15 MB.','ref.paid':'References are available on the Estudio and Productor plans.',
-      'ref.needrights':'Check the rights box to use the reference.','ref.uperr':'Could not upload the reference. Try again.','ref.uploading':'Uploading reference…',
+      'ref.needrights':'Check the rights box to use the reference.','ref.blocked':'Your account cannot use reference songs. Contact support if you think this is a mistake.','ref.uperr':'Could not upload the reference. Try again.','ref.uploading':'Uploading reference…',
       'lib.h2':'My library','lib.search':'Search songs...',
       'lib.count1':'1 song','lib.countN':'{n} songs','lib.none':'No songs found.',
       'lib.empty':'Your library is empty.','lib.first':'Create my first song',
@@ -719,6 +719,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     if(e==='InvalidGenerationInput') return t('err.input') + ((d.message)||t('err.input2'));
     if(e==='PaidOnly') return t('ref.paid');
     if(e==='RightsRequired') return t('ref.needrights');
+    if(e==='ReferencesBlocked') return t('ref.blocked');
     if(e==='ReferenceTooBig') return t('ref.big');
     if(e==='InvalidReference') return t('ref.uperr');
     return t('err.generic');
@@ -878,7 +879,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       const r = await api('generate-song',{method:'POST', body:JSON.stringify({
         title:s.title, genre:s.genre, voice:s.voice, mood:s.mood, tempo:s.tempo,
         prompt:buildPrompt(s), lyrics:s.lyrics, gender:VOICE_GENDER[s.voice]||'',
-        reference_path, rights_ok: !!(reference_path && $('#rightsOk').checked)
+        reference_path, rights_ok: !!(reference_path && $('#rightsOk').checked),
+        reference_name: refFile ? String(refFile.name).slice(0,200) : '', lang: (typeof lang!=='undefined' && lang==='en') ? 'en' : 'es'
       })});
       sent = true;
       const ns = norm(r.song); songs.unshift(ns); credits=r.credits; renderCredits(); renderLibrary();
