@@ -100,6 +100,14 @@ async function deleteObject(bucket, path) {
   await fetch(`${base()}/storage/v1/object/${bucket}/${p}`, { method: 'DELETE', headers: h() }).catch(() => {});
 }
 
+// Guarda la constancia de que el usuario aceptó la declaración de derechos de un audio de referencia.
+async function insertRightsAcceptance(row) {
+  const res = await fetch(`${base()}/rest/v1/rights_acceptances`, {
+    method: 'POST', headers: h({ 'Content-Type': 'application/json' }), body: JSON.stringify(row),
+  });
+  if (!res.ok) throw new Error(`rights record: ${res.status} ${(await res.text()).slice(0, 200)}`);
+}
+
 async function getProfile(id) {
   const res = await fetch(`${base()}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=*`, { headers: h() });
   if (!res.ok) return null;
@@ -129,4 +137,4 @@ async function forgetEvent(id) {
   await fetch(`${base()}/rest/v1/stripe_events?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: h() });
 }
 
-module.exports = { getProfile, profileByCustomer, patchProfile, recordEvent, forgetEvent, configured, getUser, rpc, insertSong, getSong, settleSong, patchSong, uploadAudio, signedUrl, objectSize, deleteObject };
+module.exports = { insertRightsAcceptance, getProfile, profileByCustomer, patchProfile, recordEvent, forgetEvent, configured, getUser, rpc, insertSong, getSong, settleSong, patchSong, uploadAudio, signedUrl, objectSize, deleteObject };
