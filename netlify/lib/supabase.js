@@ -73,6 +73,33 @@ async function uploadAudio(path, buffer, contentType) {
   if (!res.ok) throw new Error(`storage: ${res.status} ${(await res.text()).slice(0, 200)}`);
 }
 
+// Enlace temporal (firmado) a un archivo de un bucket privado, para que Soundverse pueda leerlo.
+async function signedUrl(bucket, path, seconds) {
+  const p = path.split('/').map(encodeURIComponent).join('/');
+  const res = await fetch(`${base()}/storage/v1/object/sign/${bucket}/${p}`, {
+    method: 'POST', headers: h({ 'Content-Type': 'application/json' }), body: JSON.stringify({ expiresIn: seconds || 3600 }),
+  });
+  if (!res.ok) return null;
+  const d = await res.json().catch(() => ({}));
+  const rel = d.signedURL || d.signedUrl || '';
+  return rel ? `${base()}/storage/v1${rel.startsWith('/') ? '' : '/'}${rel}` : null;
+}
+
+// Tamaño en bytes de un archivo del bucket (null si no existe).
+async function objectSize(bucket, path) {
+  const p = path.split('/').map(encodeURIComponent).join('/');
+  const res = await fetch(`${base()}/storage/v1/object/info/${bucket}/${p}`, { headers: h() });
+  if (!res.ok) return null;
+  const d = await res.json().catch(() => ({}));
+  const n = Number(d.size != null ? d.size : (d.metadata && d.metadata.size));
+  return Number.isFinite(n) ? n : 0;
+}
+
+async function deleteObject(bucket, path) {
+  const p = path.split('/').map(encodeURIComponent).join('/');
+  await fetch(`${base()}/storage/v1/object/${bucket}/${p}`, { method: 'DELETE', headers: h() }).catch(() => {});
+}
+
 async function getProfile(id) {
   const res = await fetch(`${base()}/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=*`, { headers: h() });
   if (!res.ok) return null;
@@ -102,4 +129,4 @@ async function forgetEvent(id) {
   await fetch(`${base()}/rest/v1/stripe_events?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: h() });
 }
 
-module.exports = { getProfile, profileByCustomer, patchProfile, recordEvent, forgetEvent, configured, getUser, rpc, insertSong, getSong, settleSong, patchSong, uploadAudio };
+module.exports = { getProfile, profileByCustomer, patchProfile, recordEvent, forgetEvent, configured, getUser, rpc, insertSong, getSong, settleSong, patchSong, uploadAudio, signedUrl, objectSize, deleteObject };

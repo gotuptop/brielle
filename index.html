@@ -126,6 +126,15 @@ textarea{min-height:320px;resize:vertical;line-height:1.7}
 .chip:hover{color:var(--text);border-color:var(--muted)}
 .chip.on{background:var(--amber-2);border-color:var(--ink);color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
 input[type=range]{width:100%;accent-color:var(--amber)}
+.ref-box{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ref-box .btn{padding:10px 16px;font-size:14px}
+.ref-name{font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.ref-name.has{color:var(--text);font-weight:600}
+.ref-clear{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);color:var(--muted);font-weight:700;display:grid;place-items:center}
+.ref-clear:hover{border-color:var(--amber-2);color:var(--amber-2)}
+.ref-lock{color:var(--amber-2);font-weight:600}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--muted);margin-top:10px;cursor:pointer;font-weight:500}
+.check input{margin-top:3px;accent-color:var(--amber);flex-shrink:0}
 .hint{font-size:14px;color:var(--muted);margin-top:6px}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .tools button{font-size:14px;font-weight:600;padding:7px 12px;border:2px dashed var(--line);border-radius:10px;color:var(--muted)}
@@ -346,6 +355,18 @@ input[type=range]{width:100%;accent-color:var(--amber)}
               <div class="row-between"><label for="tempo">Tempo</label><span class="counter" id="tempoVal">95 BPM</span></div>
               <input type="range" id="tempo" min="60" max="160" value="95">
             </div>
+            <div class="field" id="refField">
+              <label for="refFile" data-i18n="ref.lbl">Canción de referencia (opcional)</label>
+              <div class="ref-box">
+                <input type="file" id="refFile" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" hidden>
+                <button type="button" class="btn btn-ghost" id="refPick" data-i18n="ref.pick">Subir MP3 / M4A</button>
+                <span class="ref-name" id="refName">Ningún archivo</span>
+                <button type="button" class="ref-clear" id="refClear" hidden aria-label="Quitar">✕</button>
+              </div>
+              <p class="hint" data-i18n="ref.hint">Brielle imita el ritmo, el estilo y el tipo de voz de ese audio. Usa un fragmento de unos 30 segundos (máx. 15 MB).</p>
+              <p class="hint ref-lock" id="refLock" data-i18n="ref.lock">Disponible en los planes Estudio y Productor.</p>
+              <label class="check" id="refRights" hidden><input type="checkbox" id="rightsOk"> <span data-i18n="ref.rights">Confirmo que tengo los derechos de este audio y que soy el único responsable de su uso. Brielle solo lo usa para crear mi canción y lo borra al terminar.</span></label>
+            </div>
             <div class="field" style="margin-bottom:0">
               <p class="hint" style="margin-top:0" data-i18n="create.hint">Brielle graba canciones completas, con intro, versos, coro y final. Usa las etiquetas [Verso], [Coro], etc. en tu letra para guiar la estructura.</p>
             </div>
@@ -525,6 +546,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'genre.lbl':'Género','voice.lbl':'Voz','mood.lbl':'Ambiente','lang.song':'Idioma de la canción',
       'create.hint':'Brielle graba canciones completas, con intro, versos, coro y final. Usa las etiquetas [Verso], [Coro], etc. en tu letra para guiar la estructura.',
       'rec.btn':'● Grabar canción','rec.uses':'(usa 1 canción)',
+      'ref.lbl':'Canción de referencia (opcional)','ref.pick':'Subir MP3 / M4A','ref.none':'Ningún archivo',
+      'ref.hint':'Brielle imita el ritmo, el estilo y el tipo de voz de ese audio. Usa un fragmento de unos 30 segundos (máx. 15 MB).',
+      'ref.lock':'Disponible en los planes Estudio y Productor.',
+      'ref.rights':'Confirmo que tengo los derechos de este audio y que soy el único responsable de su uso. Brielle solo lo usa para crear mi canción y lo borra al terminar.',
+      'ref.type':'Solo se aceptan archivos MP3 o M4A.','ref.big':'La referencia no puede pasar de 15 MB.','ref.paid':'Las referencias están disponibles en los planes Estudio y Productor.',
+      'ref.needrights':'Marca la casilla de derechos para usar la referencia.','ref.uperr':'No se pudo subir la referencia. Intenta de nuevo.','ref.uploading':'Subiendo referencia…',
       'lib.h2':'Mi biblioteca','lib.search':'Buscar canción...',
       'lib.count1':'1 canción','lib.countN':'{n} canciones','lib.none':'No se encontraron canciones.',
       'lib.empty':'Tu biblioteca está vacía.','lib.first':'Crear mi primera canción',
@@ -589,6 +616,12 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'genre.lbl':'Genre','voice.lbl':'Voice','mood.lbl':'Mood','lang.song':'Song language',
       'create.hint':'Brielle records full songs, with intro, verses, chorus and outro. Use tags like [Verse], [Chorus], etc. in your lyrics to guide the structure.',
       'rec.btn':'● Record song','rec.uses':'(uses 1 song)',
+      'ref.lbl':'Reference song (optional)','ref.pick':'Upload MP3 / M4A','ref.none':'No file',
+      'ref.hint':'Brielle mimics the rhythm, style and voice type of that audio. Use a clip of about 30 seconds (max 15 MB).',
+      'ref.lock':'Available on the Estudio and Productor plans.',
+      'ref.rights':'I confirm I own the rights to this audio and I am solely responsible for its use. Brielle only uses it to create my song and deletes it when done.',
+      'ref.type':'Only MP3 or M4A files are accepted.','ref.big':'The reference cannot exceed 15 MB.','ref.paid':'References are available on the Estudio and Productor plans.',
+      'ref.needrights':'Check the rights box to use the reference.','ref.uperr':'Could not upload the reference. Try again.','ref.uploading':'Uploading reference…',
       'lib.h2':'My library','lib.search':'Search songs...',
       'lib.count1':'1 song','lib.countN':'{n} songs','lib.none':'No songs found.',
       'lib.empty':'Your library is empty.','lib.first':'Create my first song',
@@ -674,7 +707,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     const {data} = await sb.from('profiles').select('id,email,plan,display_name,credits,current_period_end').eq('id',me.id).maybeSingle();
     if(data){ credits=data.credits; plan=data.plan||'demo'; profile={name:data.display_name||'',email:data.email||me.email||''}; }
     else profile={name:'',email:me.email||''};
-    renderCredits(); renderPlans(); renderProfile();
+    renderCredits(); renderPlans(); renderProfile(); renderRef();
   }
 
   /* ---------- servidor (funciones de Netlify) ---------- */
@@ -684,6 +717,10 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     if(e==='InsufficientFunds') return t('err.funds');
     if(e==='RateLimited') return t('err.rate');
     if(e==='InvalidGenerationInput') return t('err.input') + ((d.message)||t('err.input2'));
+    if(e==='PaidOnly') return t('ref.paid');
+    if(e==='RightsRequired') return t('ref.needrights');
+    if(e==='ReferenceTooBig') return t('ref.big');
+    if(e==='InvalidReference') return t('ref.uperr');
     return t('err.generic');
   }
   async function api(path, opts={}){
@@ -760,6 +797,37 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   $('#tempo').oninput=e=>$('#tempoVal').textContent=e.target.value+' BPM';
   $('#styleExtra').addEventListener('input',e=>$('#styleCount').textContent=`${e.target.value.length} / 200`);
 
+  /* ---------- canción de referencia ---------- */
+  const REF_MAX = 15*1024*1024;
+  let refFile = null;
+  const refPaid = () => ['estudio','productor'].includes(String(plan||'').toLowerCase());
+  function renderRef(){
+    $('#refLock').hidden = refPaid();
+    $('#refName').textContent = refFile ? refFile.name : t('ref.none');
+    $('#refName').classList.toggle('has', !!refFile);
+    $('#refClear').hidden = !refFile;
+    $('#refRights').hidden = !refFile;
+    if(!refFile) $('#rightsOk').checked=false;
+  }
+  function clearRef(){ refFile=null; $('#refFile').value=''; renderRef(); }
+  $('#refPick').onclick=()=>{ if(!refPaid()){ toast(t('ref.paid')); go('planes'); return; } $('#refFile').click(); };
+  $('#refClear').onclick=clearRef;
+  $('#refFile').onchange=e=>{
+    const f=e.target.files && e.target.files[0]; if(!f) return;
+    if(!/\.(mp3|m4a)$/i.test(f.name)){ toast(t('ref.type')); clearRef(); return; }
+    if(f.size>REF_MAX){ toast(t('ref.big')); clearRef(); return; }
+    refFile=f; renderRef();
+  };
+  // Sube la referencia a references/<usuario>/<archivo> y devuelve la ruta.
+  async function uploadRef(){
+    const ext = refFile.name.toLowerCase().endsWith('.m4a') ? 'm4a' : 'mp3';
+    const path = `${me.id}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const type = ext==='m4a' ? 'audio/mp4' : 'audio/mpeg';
+    const {error} = await sb.storage.from('references').upload(path, refFile, {contentType:type, upsert:false});
+    if(error) throw new Error(t('ref.uperr'));
+    return path;
+  }
+
   function buildPrompt(s){
     const extra=String(s.style||'').replace(/\s+/g,' ').trim().slice(0,200);
     const parts=[extra, genrePrompt(s.genre,s.sub), (MOOD_PROMPT[s.mood]||s.mood)+' mood', s.tempo+' BPM', VOICE_PROMPT[s.voice]||''];
@@ -794,6 +862,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     if(!title){ toast(t('toast.title')); $('#title').focus(); return; }
     if(sel.voice!=='Instrumental' && lyrics.length<20){ toast(t('toast.lyrics')); ly.focus(); return; }
     if(credits<1){ toast(t('err.nocredits')); go('planes'); return; }
+    if(refFile && !refPaid()){ toast(t('ref.paid')); go('planes'); return; }
+    if(refFile && !$('#rightsOk').checked){ toast(t('ref.needrights')); return; }
     record({title,lyrics});
   };
 
@@ -802,18 +872,23 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     const s={title, lyrics:sel.voice==='Instrumental'?'':lyrics, genre:sel.genre, voice:sel.voice,
              mood:$('#mood').value, tempo:+$('#tempo').value, songLang:$('#songLang').value, style:$('#styleExtra').value, sub:sel.sub};
     modal.open(title);
+    let reference_path = '', sent = false;
     try{
+      if(refFile){ toast(t('ref.uploading')); reference_path = await uploadRef(); }
       const r = await api('generate-song',{method:'POST', body:JSON.stringify({
         title:s.title, genre:s.genre, voice:s.voice, mood:s.mood, tempo:s.tempo,
-        prompt:buildPrompt(s), lyrics:s.lyrics, gender:VOICE_GENDER[s.voice]||''
+        prompt:buildPrompt(s), lyrics:s.lyrics, gender:VOICE_GENDER[s.voice]||'',
+        reference_path, rights_ok: !!(reference_path && $('#rightsOk').checked)
       })});
+      sent = true;
       const ns = norm(r.song); songs.unshift(ns); credits=r.credits; renderCredits(); renderLibrary();
-      $('#title').value=''; ly.value=''; ly.dispatchEvent(new Event('input'));
+      $('#title').value=''; ly.value=''; ly.dispatchEvent(new Event('input')); clearRef();
       modal.at(1);
       await waitFor(ns, true);
     }catch(e){
       modal.close(); toast(e.message);
-      if(e.code==='NoCredits'){ loadProfile(); go('planes'); }
+      if(reference_path && !sent) sb.storage.from('references').remove([reference_path]).catch(()=>{});
+      if(e.code==='NoCredits'||e.code==='PaidOnly'){ loadProfile(); go('planes'); }
     }finally{
       recording=false; $('#recordBtn').disabled=false;
     }
@@ -1202,7 +1277,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     afterCheckout();
   }
   function leave(){
-    me=null; songs=[]; credits=0; plan='demo'; profile={name:'',email:''}; current=null;
+    me=null; songs=[]; credits=0; plan='demo'; profile={name:'',email:''}; current=null; clearRef();
     stop(); resetPlayer(); renderCredits(); renderLibrary(); $('#aPass').value=''; showAuth('login');
   }
   sb.auth.onAuthStateChange((ev,session)=>{
@@ -1235,7 +1310,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     chips($('#voices'), VOICES, 'voice', vl);
     const mv=$('#mood').value; $('#mood').innerHTML=MOODS.map(m=>`<option value="${m}">${ml(m)}</option>`).join(''); if(mv) $('#mood').value=mv;
     $('#tools').innerHTML=TOOLS.map(k=>`<button data-tag="${t('tag.'+k)}">${t('tool.'+k)}</button>`).join('');
-    renderPlans(); renderCredits(); renderLibrary(); renderProfile(); paintCloud();
+    renderPlans(); renderCredits(); renderLibrary(); renderProfile(); paintCloud(); renderRef();
     if(!current){ $('#pTitle').textContent=t('player.none'); $('#pSub').textContent=t('player.pick'); }
     if($('#auth').classList.contains('show')) showAuth();
   }

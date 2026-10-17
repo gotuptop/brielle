@@ -80,6 +80,7 @@ exports.handler = async (event) => {
       const msg = task.error || task.message || (task.output && task.output.error) || 'La generación falló';
       // Solo quien cambia el estado devuelve el crédito, así nunca se devuelve dos veces.
       if (await sb.settleSong(song.id, { status: 'failed' })) await sb.rpc('refund_credit', { p_user: user.id });
+      if (song.reference_path) await sb.deleteObject('references', song.reference_path);
       return json(200, { status: 'failed', error: typeof msg === 'string' ? msg : 'La generación falló' });
     }
     if (!['completed', 'succeeded', 'success'].includes(status)) return json(200, { status: 'processing' });
@@ -102,6 +103,8 @@ exports.handler = async (event) => {
     let meta = {}; try { meta = JSON.parse(asset.metadata_json || '{}'); } catch {}
     const duration = meta.duration_ms ? meta.duration_ms / 1000 : (asset.duration || asset.duration_seconds || null);
     await sb.settleSong(song.id, { status: 'completed', audio_path: path, duration });
+    // La referencia ya cumplió su función: se borra para no guardar audio ajeno.
+    if (song.reference_path) await sb.deleteObject('references', song.reference_path);
     return json(200, { status: 'completed', duration });
   } catch (e) {
     // Error temporal (red, almacenamiento…): la app vuelve a preguntar en unos segundos.

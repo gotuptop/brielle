@@ -31,6 +31,28 @@ exports.handler = async (event) => {
   const gender = ['male', 'female'].includes(input.gender) ? input.gender : '';
   if (!prompt) return json(400, { error: 'Falta la descripción del estilo' });
 
+  // 0) Canción de referencia (opcional): el usuario la subió a references/<su id>/<archivo>.
+  //    Solo planes pagos. Se valida que sea suya, que exista y que no pase de 15 MB (límite de Soundverse).
+  const REF_MAX = 15 * 1024 * 1024;
+  let referencePath = '', referenceUrl = '';
+  if (input.reference_path) {
+    referencePath = clean(input.reference_path, 200);
+    if (!new RegExp(`^${user.id}/[A-Za-z0-9._-]{1,120}\\.(mp3|m4a)$`, 'i').test(referencePath)) {
+      return json(400, { error: 'InvalidReference', message: 'Referencia no válida' });
+    }
+    if (!input.rights_ok) return json(400, { error: 'RightsRequired', message: 'Debes confirmar que tienes derechos sobre el audio' });
+    let profile = null;
+    try { profile = await sb.getProfile(user.id); } catch {}
+    if (!profile || !['estudio', 'productor'].includes(String(profile.plan || '').toLowerCase())) {
+      return json(403, { error: 'PaidOnly', message: 'Las referencias están disponibles en los planes Estudio y Productor' });
+    }
+    const size = await sb.objectSize('references', referencePath);
+    if (size == null) return json(400, { error: 'InvalidReference', message: 'No se encontró el archivo de referencia' });
+    if (size > REF_MAX) { await sb.deleteObject('references', referencePath); return json(400, { error: 'ReferenceTooBig', message: 'La referencia pasa de 15 MB' }); }
+    referenceUrl = await sb.signedUrl('references', referencePath, 3600);
+    if (!referenceUrl) return json(502, { error: 'No se pudo preparar la referencia' });
+  }
+
   // 1) Cobrar el crédito (atómico en la base de datos).
   let credits;
   try { credits = await sb.rpc('consume_credit', { p_user: user.id }); }
@@ -48,6 +70,7 @@ exports.handler = async (event) => {
       user_id: user.id, title, genre: clean(input.genre, 40), voice: clean(input.voice, 40), mood: clean(input.mood, 40),
       tempo: Number.isFinite(+input.tempo) ? Math.round(+input.tempo) : null,
       prompt, lyrics, instrumental: !lyrics, status: 'queued',
+      reference_path: referencePath || null,
     });
   } catch (e) {
     await refund();
@@ -57,6 +80,8 @@ exports.handler = async (event) => {
   // 3) Mandar a Soundverse.
   const body = { prompt, lyrics, parameters: { versions: 1 } }; // 1 versión = 1 canción cobrada
   if (gender) body.gender = gender;
+  // Con referencia, Soundverse usa la herramienta "similar_song": imita ritmo, estilo y tipo de voz del audio.
+  if (referenceUrl) body.reference_url = referenceUrl;
   const failAndRefund = async () => {
     try { if (await sb.settleSong(song.id, { status: 'failed' })) await refund(); } catch {}
   };
