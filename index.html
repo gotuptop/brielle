@@ -446,6 +446,19 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   </div>
 </div>
 
+<!-- GUARDAR EN EL TELÉFONO (iPhone) -->
+<div class="modal" id="saveModal">
+  <div class="studio" style="max-width:420px;text-align:center">
+    <h2 id="saveTitle" style="margin-bottom:8px" data-i18n="save.title">Tu canción está lista</h2>
+    <p id="saveName" style="color:var(--muted);margin-bottom:14px;word-break:break-word"></p>
+    <p style="font-size:14px;line-height:1.5;margin-bottom:18px" data-i18n-html="save.hint">Toca el botón y elige <b>Guardar en Archivos</b> para tenerla en tu teléfono, o envíala a tu app de música.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-primary" id="saveGo" data-i18n="save.go">Guardar en el teléfono</button>
+      <button class="btn btn-ghost" id="saveClose" data-i18n="save.close">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- LYRICS -->
 <div class="modal" id="lyrModal">
   <div class="studio" style="max-width:520px;text-align:left">
@@ -589,7 +602,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'toast.title':'Escribe un título para tu canción','toast.lyrics':'Escribe tu letra (mínimo 20 caracteres)',
       'toast.slow':'La canción tarda más de lo normal. Revisa tu biblioteca en unos minutos.','toast.ready':'¡"{t}" está lista!',
       'toast.failed':'No se pudo grabar "{t}". Te devolvimos la canción.','toast.checking':'Revisando…','toast.still':'Todavía se está grabando. Intenta en un minuto.',
-      'toast.noaudio':'El audio todavía no está disponible.','toast.audioerr':'No se pudo obtener el audio. Intenta de nuevo.','toast.dl':'Preparando descarga…',
+      'toast.noaudio':'El audio todavía no está disponible.','toast.audioerr':'No se pudo obtener el audio. Intenta de nuevo.','toast.dl':'Preparando descarga…','toast.dlok':'Descarga lista. Búscala en Archivos → Descargas.','toast.saved':'Listo. Ya tienes tu canción.',
+      'save.title':'Tu canción está lista','save.hint':'Toca el botón y elige <b>Guardar en Archivos</b> para tenerla en tu teléfono, o envíala a tu app de música.','save.go':'Guardar en el teléfono','save.close':'Cerrar',
       'toast.waitdel':'Espera a que termine de grabarse antes de eliminarla.','confirm.del':'¿Eliminar "{t}" de tu biblioteca?','toast.delerr':'No se pudo eliminar. Intenta de nuevo.',
       'toast.notready':'Esa canción todavía no está lista','player.loading':'Cargando…','toast.tapplay':'Toca ▶ para reproducir','toast.createfirst':'Crea una canción primero',
       'toast.playerr':'No se pudo reproducir. Intenta de nuevo.','toast.expired':'El enlace de audio venció. Toca ▶ otra vez.',
@@ -659,7 +673,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'toast.title':'Write a title for your song','toast.lyrics':'Write your lyrics (at least 20 characters)',
       'toast.slow':'The song is taking longer than usual. Check your library in a few minutes.','toast.ready':'"{t}" is ready!',
       'toast.failed':'Could not record "{t}". We gave your song back.','toast.checking':'Checking…','toast.still':'Still recording. Try again in a minute.',
-      'toast.noaudio':'The audio is not available yet.','toast.audioerr':'Could not get the audio. Please try again.','toast.dl':'Preparing download…',
+      'toast.noaudio':'The audio is not available yet.','toast.audioerr':'Could not get the audio. Please try again.','toast.dl':'Preparing download…','toast.dlok':'Download ready. Find it in Files → Downloads.','toast.saved':'Done. Your song is saved.',
+      'save.title':'Your song is ready','save.hint':'Tap the button and choose <b>Save to Files</b> to keep it on your phone, or send it to your music app.','save.go':'Save to phone','save.close':'Close',
       'toast.waitdel':'Wait for it to finish recording before deleting it.','confirm.del':'Delete "{t}" from your library?','toast.delerr':'Could not delete. Please try again.',
       'toast.notready':'That song is not ready yet','player.loading':'Loading…','toast.tapplay':'Tap ▶ to play','toast.createfirst':'Create a song first',
       'toast.playerr':'Could not play. Please try again.','toast.expired':'The audio link expired. Tap ▶ again.',
@@ -935,27 +950,69 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       else toast(t('toast.still'));
     }catch(e){ toast(e.message); }
   }
-  // Las canciones antiguas se guardaron como .mp3 aunque por dentro son FLAC: se mira el inicio del archivo.
-  async function realExt(s, ext){
-    try{
-      const {data} = await sb.storage.from('songs').createSignedUrl(s.audio, 120);
-      const r = await fetch(data.signedUrl, {headers:{Range:'bytes=0-11'}});
-      const b = new Uint8Array(await r.arrayBuffer()), tag = String.fromCharCode(...b.slice(0,12));
-      if(tag.startsWith('fLaC')) return 'flac';
-      if(tag.startsWith('RIFF')) return 'wav';
-      if(tag.startsWith('OggS')) return 'ogg';
-      if(tag.slice(4,8)==='ftyp') return 'm4a';
-    }catch(e){}
-    return ext;
-  }
-  async function freshUrl(s, download){
+  async function freshUrl(s){
     if(!s.audio) throw new Error(t('toast.noaudio'));
-    let ext = (s.audio.match(/\.(\w+)$/)||[])[1]||'mp3';
-    if(download && ext==='mp3') ext = await realExt(s, ext);
-    const {data,error} = await sb.storage.from('songs').createSignedUrl(s.audio, 3600, download?{download:`${s.title}.${ext}`}:undefined);
+    const {data,error} = await sb.storage.from('songs').createSignedUrl(s.audio, 3600);
     if(error||!data) throw new Error(t('toast.audioerr'));
     return data.signedUrl;
   }
+
+  /* ---------- descarga ----------
+     El audio vive en Supabase (otro dominio) y Safari en iPhone ignora el atributo download
+     cuando el enlace apunta a otro dominio: por eso antes "no bajaba nada". La solución es traer
+     el archivo a la app con fetch y entregarlo como archivo propio (blob):
+       · iPhone/iPad → hoja de compartir con el ARCHIVO (sale "Guardar en Archivos" y las apps de música).
+       · Resto → descarga normal del navegador.
+     Las canciones antiguas se guardaron como .mp3 aunque por dentro son FLAC: se mira el inicio del archivo. */
+  const MIME = {mp3:'audio/mpeg',flac:'audio/flac',wav:'audio/wav',ogg:'audio/ogg',m4a:'audio/mp4'};
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  const safeName = s => (s||'').replace(/[^\w\-áéíóúñÁÉÍÓÚÑ ]+/g,'').trim();
+  async function fetchSongFile(s){
+    const url = await freshUrl(s);
+    const r = await fetch(url);
+    if(!r.ok) throw new Error(t('toast.audioerr'));
+    const buf = await r.arrayBuffer();
+    const tag = String.fromCharCode(...new Uint8Array(buf, 0, Math.min(12, buf.byteLength)));
+    let ext = (s.audio.match(/\.(\w+)$/)||[])[1]||'mp3';
+    if(tag.startsWith('fLaC')) ext='flac';
+    else if(tag.startsWith('RIFF')) ext='wav';
+    else if(tag.startsWith('OggS')) ext='ogg';
+    else if(tag.slice(4,8)==='ftyp') ext='m4a';
+    return new File([buf], (safeName(s.title)||'cancion')+'.'+ext, {type:MIME[ext]||'audio/mpeg'});
+  }
+  function blobDownload(file){
+    const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download=file.name; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 60000);
+    toast(t('toast.dlok'));
+  }
+  let pendingFile=null;
+  async function shareFile(file){
+    try{ await navigator.share({files:[file], title:file.name}); toast(t('toast.saved')); return true; }
+    catch(e){
+      if(e.name==='AbortError') return true;            // el usuario cerró la hoja: nada que hacer
+      if(e.name==='NotAllowedError') return false;      // el gesto del toque caducó mientras bajaba: pedir un toque más
+      return false;
+    }
+  }
+  async function saveSong(s){
+    toast(t('toast.dl'));
+    const file = await fetchSongFile(s);
+    const canShare = navigator.canShare && navigator.canShare({files:[file]});
+    if(isIOS && canShare){
+      if(await shareFile(file)) return;
+      // Hace falta un toque nuevo: la propia app guía al usuario.
+      pendingFile=file; $('#saveName').textContent=file.name; $('#saveModal').classList.add('show');
+      return;
+    }
+    blobDownload(file);
+  }
+  $('#saveClose').onclick=()=>{ $('#saveModal').classList.remove('show'); pendingFile=null; };
+  $('#saveGo').onclick=async()=>{
+    if(!pendingFile) return;
+    const f=pendingFile;
+    if(await shareFile(f)){ $('#saveModal').classList.remove('show'); pendingFile=null; }
+    else { $('#saveModal').classList.remove('show'); pendingFile=null; blobDownload(f); }
+  };
 
   /* ---------- biblioteca ---------- */
   $('#search').oninput=renderLibrary;
@@ -1085,10 +1142,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     if(act==='play'){ if(current&&current.id===s.id) toggle(); else load(s,true); }
     if(act==='check') checkNow(s);
     if(act==='lyr'){ lyrSong=s; $('#lyrTitle').textContent=s.title; $('#lyrText').textContent=s.lyrics||t('lyr.none'); $('#lyrModal').classList.add('show'); }
-    if(act==='dl'){ try{ toast(t('toast.dl'));
-        // Sin window.open: el iPhone bloquea las ventanas que se abren después de una espera.
-        const a=document.createElement('a'); a.href=await freshUrl(s,true); a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove();
-      }catch(err){ toast(err.message); } }
+    if(act==='dl'){ try{ await saveSong(s); }catch(err){ toast(err.message); } }
     if(act==='del' && s.status==='pending'){ toast(t('toast.waitdel')); return; }
     if(act==='del' && confirm(t('confirm.del',{t:s.title}))){
       if(s.audio) await sb.storage.from('songs').remove([s.audio]);
