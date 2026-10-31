@@ -466,7 +466,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
     <pre id="lyrText" style="white-space:pre-wrap;font:15px/1.6 var(--body);max-height:50vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px"></pre>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
       <button class="btn btn-primary" id="lyrCopy" data-i18n="lyr.copy">Copiar</button>
-      <button class="btn btn-ghost" id="lyrDl" data-i18n="lyr.dl">Descargar .txt</button>
+      <button class="btn btn-ghost" id="lyrDl" data-i18n="lyr.dl">Descargar PDF</button>
       <button class="btn btn-ghost" id="lyrClose" data-i18n="lyr.close">Cerrar</button>
     </div>
   </div>
@@ -607,7 +607,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'toast.waitdel':'Espera a que termine de grabarse antes de eliminarla.','confirm.del':'¿Eliminar "{t}" de tu biblioteca?','toast.delerr':'No se pudo eliminar. Intenta de nuevo.',
       'toast.notready':'Esa canción todavía no está lista','player.loading':'Cargando…','toast.tapplay':'Toca ▶ para reproducir','toast.createfirst':'Crea una canción primero',
       'toast.playerr':'No se pudo reproducir. Intenta de nuevo.','toast.expired':'El enlace de audio venció. Toca ▶ otra vez.',
-      'lyr.btn':'Letra','lyr.copy':'Copiar','lyr.dl':'Descargar .txt','lyr.close':'Cerrar','lyr.copied':'Letra copiada','lyr.none':'Esta canción no tiene letra (instrumental).'
+      'lyr.btn':'Letra','lyr.copy':'Copiar','lyr.dl':'Descargar PDF','lyr.close':'Cerrar','lyr.copied':'Letra copiada','lyr.none':'Esta canción no tiene letra (instrumental).'
     },
     en: {
       'meta.title':'Brielle — Your AI song studio',
@@ -678,7 +678,7 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       'toast.waitdel':'Wait for it to finish recording before deleting it.','confirm.del':'Delete "{t}" from your library?','toast.delerr':'Could not delete. Please try again.',
       'toast.notready':'That song is not ready yet','player.loading':'Loading…','toast.tapplay':'Tap ▶ to play','toast.createfirst':'Create a song first',
       'toast.playerr':'Could not play. Please try again.','toast.expired':'The audio link expired. Tap ▶ again.',
-      'lyr.btn':'Lyrics','lyr.copy':'Copy','lyr.dl':'Download .txt','lyr.close':'Close','lyr.copied':'Lyrics copied','lyr.none':'This song has no lyrics (instrumental).'
+      'lyr.btn':'Lyrics','lyr.copy':'Copy','lyr.dl':'Download PDF','lyr.close':'Close','lyr.copied':'Lyrics copied','lyr.none':'This song has no lyrics (instrumental).'
     }
   };
   const GENRE_LABEL = {en:{'Balada':'Ballad','Reggaetón':'Reggaeton','Acústico':'Acoustic','Clásica':'Classical','Infantil':'Kids','Navideña':'Christmas'}, es:{}};
@@ -994,9 +994,8 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       return false;
     }
   }
-  async function saveSong(s){
-    toast(t('toast.dl'));
-    const file = await fetchSongFile(s);
+  // Entrega cualquier archivo (canción o PDF de la letra) por el camino que funcione en el dispositivo.
+  async function deliverFile(file){
     const canShare = navigator.canShare && navigator.canShare({files:[file]});
     if(isIOS && canShare){
       if(await shareFile(file)) return;
@@ -1005,6 +1004,73 @@ input[type=range]{width:100%;accent-color:var(--amber)}
       return;
     }
     blobDownload(file);
+  }
+  async function saveSong(s){
+    toast(t('toast.dl'));
+    await deliverFile(await fetchSongFile(s));
+  }
+
+  /* ---------- PDF de la letra (generado aquí mismo, sin librerías) ---------- */
+  // Texto → bytes WinAnsi para el PDF: acentos y ñ se escriben en octal; comillas tipográficas se normalizan.
+  function pdfText(str){
+    str = String(str).replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/[–—]/g,'-').replace(/ /g,' ');
+    let out='';
+    for(const ch of str){
+      const c=ch.charCodeAt(0);
+      if(ch==='\\'||ch==='('||ch===')') out+='\\'+ch;
+      else if(c>=32&&c<127) out+=ch;
+      else if(c>=160&&c<=255) out+='\\'+c.toString(8).padStart(3,'0');
+      else out+='?';
+    }
+    return out;
+  }
+  function wrapLines(text, maxChars){
+    const out=[];
+    for(const raw of String(text).replace(/\r/g,'').split('\n')){
+      if(!raw.trim()){ out.push(''); continue; }
+      let line='';
+      for(const w of raw.split(/\s+/)){
+        if((line+' '+w).trim().length>maxChars && line){ out.push(line); line=w; }
+        else line=(line?line+' ':'')+w;
+      }
+      out.push(line);
+    }
+    return out;
+  }
+  function lyricsPdf(s){
+    const W=612, H=792, M=60, LEAD=17, BODY=12;
+    const lines=wrapLines(s.lyrics, 78);
+    const meta=[s.genre, s.mood].filter(Boolean).join(' · ');
+    const pages=[]; let i=0, first=true;
+    while(i<lines.length || first){
+      let y=H-M, c='BT\n';
+      if(first){
+        c+=`/F2 20 Tf ${M} ${y} Td (${pdfText(s.title)}) Tj\n`; y-=14;
+        if(meta){ c+=`0.45 g /F1 11 Tf 0 -${14} Td (${pdfText(meta)}) Tj 0 g\n`; y-=14; }
+        c+=`/F1 ${BODY} Tf 0 -${26} Td\n`; y-=26; first=false;
+      } else c+=`/F1 ${BODY} Tf ${M} ${y} Td\n`;
+      while(i<lines.length && y>M+30){ c+=`(${pdfText(lines[i])}) Tj 0 -${LEAD} Td\n`; y-=LEAD; i++; }
+      c+=`ET\nBT 0.55 g /F1 9 Tf ${M} ${M-20} Td (${pdfText('Brielle · brielle.app')}) Tj 0 g ET\n`;
+      pages.push(c);
+    }
+    const objs=[]; const add=o=>{ objs.push(o); return objs.length; };
+    const cat=add('<< /Type /Catalog /Pages 2 0 R >>');
+    const pagesIdx=add('');          // se rellena al final
+    const f1=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+    const f2=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+    const kids=[];
+    for(const c of pages){
+      const cs=add(`<< /Length ${c.length} >>\nstream\n${c}endstream`);
+      kids.push(add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> /Contents ${cs} 0 R >>`)+' 0 R');
+    }
+    objs[pagesIdx-1]=`<< /Type /Pages /Kids [${kids.join(' ')}] /Count ${kids.length} >>`;
+    let pdf='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'; const offs=[];
+    objs.forEach((o,n)=>{ offs.push(pdf.length); pdf+=`${n+1} 0 obj\n${o}\nendobj\n`; });
+    const xref=pdf.length;
+    pdf+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('');
+    pdf+=`trailer\n<< /Size ${objs.length+1} /Root ${cat} 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    const bytes=Uint8Array.from(pdf, ch=>ch.charCodeAt(0)&0xFF);
+    return new File([bytes], (safeName(s.title)||'letra')+'.pdf', {type:'application/pdf'});
   }
   $('#saveClose').onclick=()=>{ $('#saveModal').classList.remove('show'); pendingFile=null; };
   $('#saveGo').onclick=async()=>{
@@ -1157,10 +1223,9 @@ input[type=range]{width:100%;accent-color:var(--amber)}
   let lyrSong=null;
   $('#lyrClose').onclick=()=>$('#lyrModal').classList.remove('show');
   $('#lyrCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(lyrSong.lyrics||''); toast(t('lyr.copied')); }catch(e){ const r=document.createRange(); r.selectNodeContents($('#lyrText')); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(r); } };
-  $('#lyrDl').onclick=()=>{
+  $('#lyrDl').onclick=async()=>{
     if(!lyrSong||!lyrSong.lyrics) return;
-    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([lyrSong.title+'\n\n'+lyrSong.lyrics],{type:'text/plain;charset=utf-8'}));
-    a.download=(lyrSong.title.replace(/[^\w\-áéíóúñÁÉÍÓÚÑ ]+/g,'').trim()||'letra')+'.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    try{ await deliverFile(lyricsPdf(lyrSong)); }catch(e){ toast(e.message); }
   };
 
   /* ---------- reproductor con audio real ---------- */
