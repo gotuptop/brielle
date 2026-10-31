@@ -13,6 +13,7 @@
 | `STRIPE_SECRET_KEY` | `sk_test_...` (pruebas) / `sk_live_...` (real) | sí |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` del webhook | sí |
 | `BRIELLE_ACCESS_CODE` | solo para `song-status?debug=1` | sí |
+| `DEEPGRAM_API_KEY` | clave de Deepgram (karaoke: tiempos de la letra) | sí |
 
 ## Stripe
 - Webhook: endpoint `https://brielle.app/.netlify/functions/stripe-webhook`
